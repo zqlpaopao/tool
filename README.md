@@ -25,12 +25,12 @@ if db, err = src2.NewSSHMysqlClient(&src2.Config{
 package main
 
 import (
-	"github.com/zqlpaopao/ssh-tool/zap-log/src"
+	"github.com/zqlpaopao/tool/zap-log/src"
 )
 
 /*
 	提供日志分割和日志保存周期控制
- */
+*/
 
 func main(){
 	type str struct{
