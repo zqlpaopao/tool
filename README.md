@@ -69,3 +69,6 @@ func main(){
 {"level":"WARN","time":"2021-12-17 18:08:19","file":"zap-log/main.go:32","msg":"Warn","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":""}
 
 ```
+
+## json
+json 包支持string到[]byte的转换，不会有err信息，nil的[]byte转换为""字符串
