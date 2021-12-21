@@ -70,5 +70,6 @@ func main(){
 
 ```
 
-## json
-json 包支持string到[]byte的转换，不会有err信息，nil的[]byte转换为""字符串
+## string-byte
+string-byte 包支持string到[]byte的转换，不会有err信息，nil的[]byte转换为""字符串
+会比string([]byte())和 []byte(string) 快

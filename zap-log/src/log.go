@@ -195,7 +195,7 @@ func(e *ErrorHandle)Msg(err string){
 	}
 }
 
-// ToJsonData to json
+// ToJsonData to string-byte
 func ToJsonData(args []interface{}) zap.Field {
 	det := make([]string, 0)
 	if len(args) > 0 {
