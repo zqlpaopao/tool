@@ -20,6 +20,7 @@ if db, err = src2.NewSSHMysqlClient(&src2.Config{
 2. 支持日志的最大数量，默认禁用
 3. 支持日志的最大存活周期，默认禁用
 4. 支持文件的旋转周期，默认1小时
+5. 支持记录ip信息，多节点部署更容易定位问题
 
 ```
 package main
@@ -62,11 +63,11 @@ func main(){
 }
 ```
 ```
-{"level":"INFO","time":"2021-12-17 18:08:19","file":"zap-log/main.go:27","msg":"Info","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Info"}
-{"level":"WARN","time":"2021-12-17 18:08:19","file":"zap-log/main.go:28","msg":"Warn","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Warn"}
-{"level":"ERROR","time":"2021-12-17 18:08:19","file":"zap-log/main.go:29","msg":"Error","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Error"}
-{"level":"DEBUG","time":"2021-12-17 18:08:19","file":"zap-log/main.go:30","msg":"Debug","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Debug"}
-{"level":"WARN","time":"2021-12-17 18:08:19","file":"zap-log/main.go:32","msg":"Warn","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":""}
+{"level":"INFO","time":"2021-12-23 09:59:11","file":"zap-log/main.go:33","msg":"Info","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Info"}
+{"level":"WARN","time":"2021-12-23 09:59:11","file":"zap-log/main.go:34","msg":"Warn","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Warn"}
+{"level":"ERROR","time":"2021-12-23 09:59:11","file":"zap-log/main.go:35","msg":"Error","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Error"}
+{"level":"DEBUG","time":"2021-12-23 09:59:11","file":"zap-log/main.go:36","msg":"Debug","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Debug"}
+{"level":"WARN","time":"2021-12-23 09:59:11","file":"zap-log/main.go:38","msg":"Warn","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":""}
 
 ```
 

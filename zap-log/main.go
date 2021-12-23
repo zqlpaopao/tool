@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/zqlpaopao/ssh-tool/zap-log/src"
+	"github.com/zqlpaopao/tool/zap-log/src"
 )
 
 /*
@@ -20,13 +20,16 @@ func main(){
 		sex:  []int{1,2,3,4},
 	}
 	//debug info 是一个级别 warn和errorshi 是一个级别，不同级别可分别记录
-	src.InitLoggerHandler(&src.LogConfig{
-		InfoPathFileName: "./demo.log",
-		WarnPathFileName: "./demo.log",
-		//WithRotationTime: //最大旋转时间 默认值1小时
-		//WithMaxAge: //日志最长保存时间，乘以小时 默认禁用
-		//WithRotationCount: //保存的最大文件数 //默认禁用
-	})
+	src.InitLoggerHandler(src.NewLogConfig(
+		src.InitInfoPathFileName("./demo.log"),
+		src.InitWarnPathFileName("./demo.log"),
+		src.InitWithMaxAge(0),//日志最长保存时间，乘以小时 默认禁用
+		src.InitWithRotationCount(0),//保存的最大文件数 //默认禁用
+		src.InitWithRotationTime(0),//最大旋转时间 默认值1小时
+		src.InitWithIp(1)))
+
+
+
 	src.Info("Info",s).Msg("Info")
 	src.Warn("Warn",s).Msg("Warn")
 	src.Error("Error",s).Msg("Error")
