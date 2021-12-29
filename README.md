@@ -74,3 +74,12 @@ func main(){
 ## string-byte
 string-byte 包支持string到[]byte的转换，不会有err信息，nil的[]byte转换为""字符串
 会比string([]byte())和 []byte(string) 快
+
+## ip
+获取本季ip信息
+
+## format
+待颜色的输出字体，红色和绿色
+
+## config
+获取配置文件内容 viper封装
