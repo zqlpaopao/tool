@@ -83,3 +83,15 @@ string-byte 包支持string到[]byte的转换，不会有err信息，nil的[]byt
 
 ## config
 获取配置文件内容 viper封装
+
+## json
+针对不确定的类型转为interface的时候int 转为float导致精度丢失
+```
+var request = `{"id":7044144249855934983}`
+r ,e := src.MarshalWithInterface(request)
+fmt.Println(r ,e)//map[id:7044144249855934983] <nil>
+
+
+正常的
+原始的数据{"id":7044144249855934983,"name":"demo"}， 转化后的数据{"id":7044144249855935000,"name":"demo"}
+```

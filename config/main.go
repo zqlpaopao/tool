@@ -6,7 +6,7 @@ import (
 )
 
 /*
-CONF_DIR=/Users/zql/Desktop/test/tool/config/testconf go run main.go
+CONF_DIR=/Users/zql/Desktop/test/tool/config/testconf go run main_test.go
 
  */
 
