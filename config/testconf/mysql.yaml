@@ -1,0 +1,5 @@
+project:
+  source: user:password@/dbname?charset=utf8&parseTime=True&loc=Local
+  max_idle_connections: 50
+  max_open_connections: 10
+  #20 10
