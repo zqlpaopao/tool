@@ -5,11 +5,44 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	src2 "github.com/zqlpaopao/tool/ssh-tool/src"
+	"golang.org/x/crypto/ssh"
+	"os"
 )
 
 func main() {
 	testGorm()
 	//testGorm()
+}
+
+//Terminal 交互式输入
+func Terminal(){
+	var (
+		client *src2.Client
+		err error
+	)
+
+	//get sshClient
+	if client, err = src2.DialWithPasswd(&src2.Config{
+		Addr:   "xx.xx.xx.xx:22",
+		User:   "root",
+		Passwd: "@xxxxxxx",
+	}); nil != err {
+		panic(err)
+	}
+	if err = client.Terminal(&src2.TerminalConfig{
+		Term :  "xterm-256color",
+		Height :14800,
+		Weight :14800,
+		Modes  :ssh.TerminalModes{
+			ssh.ECHO: 1,
+			ssh.TTY_OP_ISPEED: 14400,
+			ssh.TTY_OP_OSPEED: 14400,
+		}}).SetStdio(os.Stdin,os.Stdout, os.Stdin).Start();nil != err{
+		panic(err)
+	}
+
+
+
 }
 
 //-- ----------------------------
