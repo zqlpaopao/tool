@@ -21,6 +21,7 @@ type (
 
 var (
 	Ctx = new(mySQLManager)
+	maxIdleConn, maxOpenConn        = "5", "20"
 )
 
 func init() {
@@ -54,18 +55,17 @@ func (manager *mySQLManager) readOption(name string) (map[string]string, error) 
 //-- ----------------------------
 func checkArgs(dbConfig map[string]string) map[string]string {
 	var (
-		maxIdleConnection, maxOpenConnection        = "5", "20"
 		maxIdleConnectionInt, maxOpenConnectionInt int
 		err                                        error
 	)
 	if maxIdleConnections, exit := dbConfig["max_idle_connections"]; exit {
 		if maxIdleConnectionInt, err = strconv.Atoi(maxIdleConnections); err != nil {
-			dbConfig["max_idle_connections"] = maxIdleConnection
+			dbConfig["max_idle_connections"] = maxIdleConn
 		}
 	}
 	if maxOpenConnections, exit := dbConfig["max_open_connections"]; exit {
 		if maxOpenConnectionInt, err = strconv.Atoi(maxOpenConnections); err != nil {
-			dbConfig["max_open_connections"] = maxOpenConnection
+			dbConfig["max_open_connections"] = maxOpenConn
 		}
 	}
 	if maxIdleConnectionInt > maxOpenConnectionInt {

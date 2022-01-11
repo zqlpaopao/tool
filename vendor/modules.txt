@@ -34,6 +34,9 @@ github.com/lestrrat-go/file-rotatelogs/internal/option
 # github.com/lestrrat-go/strftime v1.0.5
 ## explicit
 github.com/lestrrat-go/strftime
+# github.com/libgit2/git2go v0.28.4
+## explicit
+github.com/libgit2/git2go
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
 # github.com/mattn/go-isatty v0.0.14
