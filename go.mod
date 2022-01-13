@@ -3,6 +3,7 @@ module github.com/zqlpaopao/tool
 go 1.16
 
 require (
+	github.com/beego/beego/v2 v2.0.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/jonboulle/clockwork v0.2.2 // indirect
