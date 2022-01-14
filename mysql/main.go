@@ -15,7 +15,7 @@ type CoverInfos interface {
 }
 
 type CronHost struct {
-	Id     int16  `json:"id"`
+	Id     int16  `json:"id" cv:"id_1"`
 	Name   string `json:"name"`
 	Alias  string `json:"alias"`
 	Port   int32  `json:"port"`
@@ -40,11 +40,12 @@ func Conversion(){
 		Port:   98,
 		Remark: "remark",
 	}
-	err := mysql.GetSQL(mysql.CoverReqInfo{
+	c1,err := mysql.GetSQL(mysql.CoverReqInfo{
 		Table: "table",
 		StructInfo: &c,
 	})
 	fmt.Println(err)
+	fmt.Println(c1)
 }
 
 func GetCLinet(){

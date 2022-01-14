@@ -1,6 +1,8 @@
 package pkg
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func StringFromAssertionFloat(number interface{}) string {
 	var numberString string

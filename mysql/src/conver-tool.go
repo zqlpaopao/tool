@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	OnDuKU = "ON DUPLICATE KEY UPDATE "
+	OnDuKU = " ON DUPLICATE KEY UPDATE "
+	Tag = "cv"
 )
 
 type Flags int
@@ -69,8 +70,6 @@ func GetSQL(coverIn CoverReqInfo)(resp *CoverRespInfo,err error){
 	if t.Kind() != reflect.Struct{
 		return nil,errors.New("params is not struct")
 	}
-	ty := t.Type()
-	fieldNum := t.NumField()
 	resp = &CoverRespInfo{
 		Insert: struct {
 			Sql    string
@@ -85,31 +84,50 @@ func GetSQL(coverIn CoverReqInfo)(resp *CoverRespInfo,err error){
 			Params []interface{}
 		}{},
 	}
-	resp.Insert.Sql = "INSERT INTO " + coverIn.Table + "("
-	resp.Update.Sql = "UPDATE SET " + coverIn.Table
-	resp.OnDu.Sql +=  coverIn.Table
-
-	for i := 1; i < fieldNum; i++ {
-		resp.Insert.Sql += "`" + strings.ToLower(ty.Field(i).Name)+"`,"
-		resp.Update.Sql += " `" + strings.ToLower(ty.Field(i).Name)+"` = ?,"
-		resp.OnDu.Sql += " `" + strings.ToLower(ty.Field(i).Name)+"` = ?,"
-		resp.Insert.Params = append(resp.Insert.Params,pkg.StringFromAssertionFloat(t.Field(i).Interface()))
-		resp.Update.Params = append(resp.Update.Params,pkg.StringFromAssertionFloat(t.Field(i).Interface()))
-	}
-	resp.Insert.Sql = strings.TrimRight(resp.Insert.Sql,",")
-	resp.Update.Sql = strings.TrimRight(resp.Update.Sql,",")
-	resp.OnDu.Sql = strings.TrimRight(resp.OnDu.Sql,",")
-	resp.OnDu.Sql = resp.Insert.Sql + OnDuKU + strings.TrimRight(resp.OnDu.Sql,",")
-	resp.OnDu.Params = append(resp.OnDu.Params,resp.Insert.Params...)
-	resp.OnDu.Params = append(resp.OnDu.Params,resp.Update.Params...)
-	resp.Insert.Sql += ") VALUES (?"
-	for i := 1; i < fieldNum; i++ {
-		resp.Insert.Sql += ",?"
-	}
-	resp.Insert.Sql += ")"
+	var params []interface{}
+	resp.Insert.Sql,  resp.Update.Sql,resp.OnDu.Sql,params = getSqlAndParams(coverIn.Table,t)
+	resp.Insert.Params = params
+	resp.Update.Params = params
+	resp.OnDu.Params = params
+	resp.OnDu.Params = append(resp.OnDu.Params,params...)
 	return SwitchResp(coverIn.Type,resp) ,nil
 }
 
+//getSqlAndParams get sql & params
+func getSqlAndParams(table string,t reflect.Value)(insert,update,onDu string,params []interface{}){
+	ty := t.Type()
+	var (
+		insertSql,updateSql,onDuSql strings.Builder
+	)
+	insertSql.WriteString("INSERT INTO "+table + "(")
+	updateSql.WriteString("UPDATE SET")
+	onDuSql.WriteString(table)
+	fieldNum := t.NumField()
+	for i := 0; i < fieldNum; i++ {
+		if ty.Field(i).Tag.Get(Tag) == ""{
+			insertSql.WriteString("`" + pkg.SnakeString(ty.Field(i).Name)+"`,")
+			updateSql.WriteString(" `" + pkg.SnakeString(ty.Field(i).Name)+"` = ?,")
+			onDuSql.WriteString(" `" + pkg.SnakeString(ty.Field(i).Name)+"` = ?,")
+		}else {
+			insertSql.WriteString("`" + ty.Field(i).Tag.Get("cv")+"`,")
+			updateSql.WriteString(" `" + ty.Field(i).Tag.Get("cv")+"` = ?,")
+			onDuSql.WriteString(" `" + ty.Field(i).Tag.Get("cv")+"` = ?,")
+		}
+		params = append(params,pkg.StringFromAssertionFloat(t.Field(i).Interface()))
+	}
+	insert,update,onDu = insertSql.String(),updateSql.String(),onDuSql.String()
+
+	insert = strings.TrimRight(insert,",")
+	update = strings.TrimRight(update,",")
+	insert += ") VALUES (?"
+	for i := 1; i < fieldNum; i++ {
+		insert += ",?"
+	}
+	insert += ")"
+	onDu = insert + OnDuKU + strings.TrimRight(onDu,",")
+
+	return
+}
 
 //SwitchResp response
 func SwitchResp(typ Flags,resp *CoverRespInfo)*CoverRespInfo{
