@@ -25,6 +25,8 @@ github.com/jinzhu/gorm
 github.com/jinzhu/gorm/dialects/mysql
 # github.com/jinzhu/inflection v1.0.0
 github.com/jinzhu/inflection
+# github.com/jinzhu/now v1.1.4
+github.com/jinzhu/now
 # github.com/jonboulle/clockwork v0.2.2
 ## explicit
 # github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
@@ -122,3 +124,10 @@ golang.org/x/text/unicode/norm
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
+# gorm.io/gorm v1.22.5
+## explicit
+gorm.io/gorm
+gorm.io/gorm/clause
+gorm.io/gorm/logger
+gorm.io/gorm/schema
+gorm.io/gorm/utils
