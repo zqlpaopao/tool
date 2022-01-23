@@ -15,7 +15,8 @@ var flagNames = []string{
 
 type RequestArgs struct {
 	RequestUrl string
-	RequestParams map[string]string
+	RequestParamsGet map[string]string
+	RequestParamsPost []byte
 	RequestType Flags
 	RequestHeader map[string]string
 	SetTimeOut int64

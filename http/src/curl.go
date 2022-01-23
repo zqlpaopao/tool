@@ -1,6 +1,7 @@
 package src
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -30,7 +31,7 @@ func (c *curlManager) NewRequest(args RequestArgs) (curlMan *curlManager, err er
 		client: http.Client{},
 	}
 	data := url.Values{}
-	curlMan.assignReqParam(&data, args.RequestParams)
+	curlMan.assignReqParam(&data, args.RequestParamsGet)
 	curlMan.SetTimeOut(args.SetTimeOut)
 	err = curlMan.switchMethod(&args,&data)
 	curlMan.client = http.Client{
@@ -45,13 +46,14 @@ func(c *curlManager)switchMethod(args *RequestArgs,data *url.Values)(err error){
 	var body io.Reader
 	switch args.RequestType{
 	case RequestPost:
-		c.assignHeader(args.RequestHeader)
-		body = strings.NewReader(data.Encode())
+		body = bytes.NewReader(args.RequestParamsPost)
 	case RequestGet:
 		args.RequestUrl = tidyGetArgs(args.RequestUrl,data.Encode())
 		body = nil
 	}
 	c.request, err = http.NewRequest(args.RequestType.String(), args.RequestUrl, body)
+	c.assignHeader(args.RequestHeader)
+
 	return
 }
 
