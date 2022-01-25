@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	V2 "gorm.io/gorm"
 	config "github.com/zqlpaopao/tool/config/src"
 	mysql "github.com/zqlpaopao/tool/mysql/src"
 	"time"
@@ -13,11 +14,13 @@ const project = "project"
 
 
 func main(){
-	getWhereSqlByStruct()
+	//getWhereSqlByStruct()
 	//getWhereSqlBySlice()
 	//ReplaceQuestionToDollar()
+	GetGormClientV2()
 
 }
+
 
 // -------------------------------------------------- -------------------------------------------------//
 //getWhereSqlByStruct
@@ -177,4 +180,24 @@ func GetGormClient(){
 	}
 
 	dbClient = dbClient
+}
+
+//GetGormClient 获取 Gorm client
+func GetGormClientV2(){
+	var (
+		err error
+		dbClient1 *V2.DB
+	)
+	//初始化环境变量
+	if err = config.Ctx.Init("CONF_DIR");nil != err{
+		panic(err)
+	}
+
+	if dbClient1 ,err = mysql.CtxOrmV2.GetClient(project);nil != err{
+		panic(err)
+	}
+
+	err = dbClient1.Debug().Exec("select * from cron_tab").Error
+	fmt.Println(err)
+	dbClient1 = dbClient1
 }

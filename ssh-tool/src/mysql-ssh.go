@@ -6,6 +6,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	sqlGorm "gorm.io/driver/mysql"
+	V2 "gorm.io/gorm"
 	"os"
 )
 
@@ -57,6 +59,16 @@ func Query(db *sql.DB, table string) (count int, err error) {
 func (m *MysqlConfig) GormClient(client Client) (db *gorm.DB, err error) {
 	mysql.RegisterDialContext("mysql+tcp", (&ViaSSHDialer{client: client.client}).Dial)
 	return gorm.Open("mysql", fmt.Sprintf("%s:%s@mysql+tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", m.UserName, m.PassWd, m.IpPort, m.Dbname))
+}
+
+//GormClientV2 -- ----------------------------
+//--> @Description
+//--> @Param
+//--> @return
+//-- ----------------------------
+func (m *MysqlConfig) GormClientV2(client Client) (db *V2.DB, err error) {
+	mysql.RegisterDialContext("mysql+tcp", (&ViaSSHDialer{client: client.client}).Dial)
+	return V2.Open(sqlGorm.Open(fmt.Sprintf("%s:%s@mysql+tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", m.UserName, m.PassWd, m.IpPort, m.Dbname)), &V2.Config{})
 }
 
 //GormQuery -- ----------------------------

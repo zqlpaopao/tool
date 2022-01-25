@@ -109,3 +109,13 @@ _"github.com/zqlpaopao/tool/version-num-manager/src"
 2022-01-11 10:53:29 Version: main_zql_2022-01-04 20:34:45_testMsg_85e24f6
 ```
 也可以自定义
+
+## mysql支持的工具
+1. 支持ssh获取原生mysql客户端
+2. 支持ssh获取gorm的客户端
+3. 支持ON DUPLICATE KEY UPDATE
+4. 支持insert sql
+5. 支持update sql
+6. 支持struct转where sql
+7. 支持map 转where sql
+8. 支持gorm的created&query&delete&update&raw操作的前后触发插件
