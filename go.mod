@@ -5,7 +5,9 @@ go 1.16
 require (
 	github.com/beego/beego/v2 v2.0.1
 	github.com/go-mysql-org/go-mysql v1.4.0
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/jinzhu/gorm v1.9.16
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
