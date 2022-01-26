@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	V2 "gorm.io/gorm"
 	config "github.com/zqlpaopao/tool/config/src"
 	mysql "github.com/zqlpaopao/tool/mysql/src"
+	V2 "gorm.io/gorm"
 	"time"
 )
 

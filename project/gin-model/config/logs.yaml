@@ -1,0 +1,2 @@
+log:
+  path: ./log-web.log
