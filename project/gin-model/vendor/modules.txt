@@ -3,6 +3,9 @@ github.com/fsnotify/fsnotify
 # github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6
 ## explicit
 github.com/fvbock/endless
+# github.com/gin-contrib/pprof v1.3.0
+## explicit
+github.com/gin-contrib/pprof
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
 # github.com/gin-gonic/gin v1.7.7
@@ -82,6 +85,7 @@ github.com/zqlpaopao/tool/config/src
 github.com/zqlpaopao/tool/format/src
 github.com/zqlpaopao/tool/ip/src
 github.com/zqlpaopao/tool/string-byte/src
+github.com/zqlpaopao/tool/version-num-manager/src
 github.com/zqlpaopao/tool/zap-log/src
 # go.uber.org/atomic v1.7.0
 go.uber.org/atomic

@@ -21,9 +21,10 @@ type Pprof struct {
 }
 
 type EnvConfig struct {
-	Web WebConfig
+	VersionInfo bool
 	PProf Pprof
 	Mode string
+	Web WebConfig
 }
 
 

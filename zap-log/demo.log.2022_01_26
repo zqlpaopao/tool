@@ -1,5 +1,0 @@
-{"level":"INFO","time":"2022-01-26 16:35:08","file":"zap-log/main.go:33","msg":"Info","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Info"}
-{"level":"WARN","time":"2022-01-26 16:35:08","file":"zap-log/main.go:34","msg":"Warn","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Warn"}
-{"level":"ERROR","time":"2022-01-26 16:35:08","file":"zap-log/main.go:35","msg":"Error","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Error"}
-{"level":"DEBUG","time":"2022-01-26 16:35:08","file":"zap-log/main.go:36","msg":"Debug","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":"Debug"}
-{"level":"WARN","time":"2022-01-26 16:35:08","file":"zap-log/main.go:38","msg":"Warn","localIp":"10.254.45.120/22","params":["{name:name age:18 sex:[1 2 3 4]}"],"errMsg":""}

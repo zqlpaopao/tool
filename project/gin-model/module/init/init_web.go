@@ -3,12 +3,14 @@ package start
 import (
 	"fmt"
 	"github.com/fvbock/endless"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	config "github.com/zqlpaopao/tool/config/src"
 	format "github.com/zqlpaopao/tool/format/src"
 	"github.com/zqlpaopao/tool/gin-model/common"
 	"github.com/zqlpaopao/tool/gin-model/module/web/middleware"
+	versionInfo "github.com/zqlpaopao/tool/version-num-manager/src"
 	"os"
 )
 
@@ -29,6 +31,7 @@ func InitEnvConfig() {
 		panic(err)
 	}
 	tidyAuthUrl(common.EnvConf)
+	fmt.Printf("%#v",common.EnvConf)
 }
 
 func tidyAuthUrl(config *common.Config) {
@@ -60,8 +63,34 @@ func InitGin() {
 	//gin.ReleaseMode
 	gin.SetMode(common.EnvConf.Env.Mode)
 	_ = g.SetTrustedProxies(nil)
+	openPProf(g)
+	openVersionInfo()
 	startListen(g)
 
+}
+
+//开启pprof
+func openPProf(g *gin.Engine){
+	if common.EnvConf.Env.PProf.OpenTag{
+		pprof.Register(g) // 性能
+	}
+}
+
+//开启版本信息
+func openVersionInfo(){
+	versionInfo.op
+	err := versionInfo.NewVersionNumManager(
+		versionInfo.WithNotAuth(false),
+		versionInfo.WithBranch(true),
+		versionInfo.WithPrint(true),
+		versionInfo.WithTag("Version: "),
+
+	).Do().Error()
+	if err != nil{
+		return
+	}
+
+	fmt.Println(versionInfo.GetVersion())
 }
 
 //设置指定的use the X-Forwarded-For

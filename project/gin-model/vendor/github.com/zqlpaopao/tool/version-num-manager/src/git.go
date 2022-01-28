@@ -6,10 +6,7 @@ import (
 	"strings"
 )
 
-var (
-	version string
-	OpenTag bool
-)
+var version string
 
 type versionNumManager struct {
 	option      *option
@@ -19,9 +16,6 @@ type versionNumManager struct {
 }
 
 func init(){
-	if !OpenTag{
-		return
-	}
 	initVersion()
 }
 
@@ -30,7 +24,7 @@ func initVersion(){
 		WithNotAuth(false),
 		WithBranch(true),
 		WithPrint(true),
-		WithTag("<========== Version Info ==========> "),
+		WithTag("Version ==========> "),
 	).Do().Error();err != nil{
 		src.PrintRed(err.Error())
 	}
@@ -87,11 +81,7 @@ func (v *versionNumManager) getBranch() {
 
 //print print version
 func (v *versionNumManager) print() {
-
-	src.PrintRedNoTime(`				<****************  `+v.option.tag +` ********************>      `)
-	src.PrintGreen(version)
-	src.PrintRedNoTime(`																				`)
-
+	src.PrintGreen(v.option.tag + version)
 }
 
 //Error get error

@@ -19,10 +19,12 @@ func main(){
 		age:  18,
 		sex:  []int{1,2,3,4},
 	}
+
+
 	//debug info 是一个级别 warn和errorshi 是一个级别，不同级别可分别记录
 	src.InitLoggerHandler(src.NewLogConfig(
-		src.InitInfoPathFileName("./demo.log"),
-		src.InitWarnPathFileName("./demo.log"),
+		src.InitInfoPathFileName("./demo_%Y_%m_%d.log"),
+		src.InitWarnPathFileName("./demo_%Y_%m_%d.log"),
 		src.InitWithMaxAge(0),//日志最长保存时间，乘以小时 默认禁用
 		src.InitWithRotationCount(0),//保存的最大文件数 //默认禁用
 		src.InitWithRotationTime(0),//最大旋转时间 默认值1小时
