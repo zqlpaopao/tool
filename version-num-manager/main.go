@@ -12,7 +12,6 @@ func main(){
 }
 
 func getVersion(){
-	src.OpenTag = true
 	err := src.NewVersionNumManager(
 		src.WithNotAuth(false),
 		src.WithBranch(true),

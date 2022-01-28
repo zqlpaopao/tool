@@ -10,9 +10,7 @@ import (
 	format "github.com/zqlpaopao/tool/format/src"
 	"github.com/zqlpaopao/tool/gin-model/common"
 	"github.com/zqlpaopao/tool/gin-model/module/web/middleware"
-	"github.com/zqlpaopao/tool/version-num-manager/src"
-
-	//versionInfo "github.com/zqlpaopao/tool/version-num-manager/src"
+	versionInfo "github.com/zqlpaopao/tool/version-num-manager/src"
 	"os"
 )
 
@@ -80,20 +78,14 @@ func openPProf(g *gin.Engine){
 
 //开启版本信息
 func openVersionInfo(){
-
-	src.NewVersionNumManager()
-	//err := versionInfo.NewVersionNumManager(
-	//	versionInfo.WithNotAuth(false),
-	//	versionInfo.WithBranch(true),
-	//	versionInfo.WithPrint(true),
-	//	versionInfo.WithTag("Version: "),
-	//
-	//).Do().Error()
-	//if err != nil{
-	//	return
-	//}
-
-	fmt.Println(versionInfo.GetVersion())
+	if err := versionInfo.NewVersionNumManager(
+		versionInfo.WithNotAuth(false),
+		versionInfo.WithBranch(true),
+		versionInfo.WithPrint(true),
+		versionInfo.WithTag("Version Info "),
+	).Do().Error();err != nil{
+		format.PrintRed(err.Error())
+	}
 }
 
 //设置指定的use the X-Forwarded-For
