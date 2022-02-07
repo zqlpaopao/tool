@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	src2 "github.com/zqlpaopao/tool/ssh-tool/src"
-
-	//"git.jd.com/npd_automation/joypaw-link-detection/common"
 	"github.com/beego/beego/v2/client/httplib"
 	"github.com/jinzhu/gorm"
 	"github.com/zqlpaopao/tool/http/src"
