@@ -32,6 +32,12 @@ var (
 	IpInfo string
 )
 
+
+func init(){
+	errHandler = new(ErrorHandle)
+}
+
+
 //InitLoggerHandler -- ----------------------------
 //--> @Description  Initialize log processing assistant
 //--> @Param
@@ -113,7 +119,7 @@ func getWriter(filename string, logConf *logConfig) io.Writer {
 	// 保存7天内的日志，每1小时(整点)分割一次日志
 	hook, err := rotateLogs.New(
 		//%Y%m%d%H%M%S 年月日 时分秒 能记录到小时
-		filename+".%Y_%m_%d",
+		filename,
 		getStartRotateLogsConf(logConf)...,
 	)
 	if err != nil {
@@ -171,23 +177,23 @@ type ErrorHandle struct {
 
 // Debug level
 func Debug(msg string, args ...interface{}) *ErrorHandle {
-	return &ErrorHandle{msg: msg, args: args, tag: debugLevel}
+	return errHandler.initParams(msg,debugLevel,args)
 }
 
 // Info level
 func Info(msg string, args ...interface{}) *ErrorHandle {
-	return &ErrorHandle{msg: msg, args: args, tag: infoLevel}
+	return errHandler.initParams(msg,infoLevel,args)
 }
 
 // Warn level
 func Warn(msg string, args ...interface{}) *ErrorHandle {
-	return &ErrorHandle{msg: msg, args: args, tag: warnLevel}
+	return errHandler.initParams(msg,warnLevel,args)
 	//FormatLog(args).Sugar().Warnf(msg)
 }
 
 //Error level
 func Error(msg string, args ...interface{}) *ErrorHandle {
-	return &ErrorHandle{msg: msg, args: args, tag: errorLevel}
+	return errHandler.initParams(msg,errorLevel,args)
 }
 
 // Msg Really write

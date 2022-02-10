@@ -19,7 +19,11 @@ func main(){
 		age:  18,
 		sex:  []int{1,2,3,4},
 	}
-
+	s1 := str{
+		name: "name1",
+		age:  181,
+		sex:  []int{1,2,3,41},
+	}
 
 	//debug info 是一个级别 warn和errorshi 是一个级别，不同级别可分别记录
 	src.InitLoggerHandler(src.NewLogConfig(
@@ -33,7 +37,7 @@ func main(){
 
 
 	src.Info("Info",s).Msg("Info")
-	src.Warn("Warn",s).Msg("Warn")
+	src.Warn("Warn",s1).Msg("Warn")
 	src.Error("Error",s).Msg("Error")
 	src.Debug("Debug",s).Msg("Debug")
 
