@@ -81,11 +81,16 @@ func (v *versionNumManager) getBranch() {
 
 //print print version
 func (v *versionNumManager) print() {
-
-	src.PrintRedNoTime(`				<****************  `+v.option.tag +` ********************>      `)
-	src.PrintGreen(version)
-	src.PrintRedNoTime(`																				`)
-
+	header := "******************************** Version info *****************************************"
+	end := "***************************************************************************************"
+	info := "**           "+v.option.tag
+	for i:= 0;i<len(header)-len(v.option.tag)-15;i++{
+		info += " "
+	}
+	info += "**"
+	src.PrintGreenNoTime(header+`
+`+info+`
+`+end)
 }
 
 //Error get error

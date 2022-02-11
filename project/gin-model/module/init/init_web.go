@@ -58,7 +58,7 @@ func checkArgs() error {
 
 func InitGin() {
 	g := gin.Default()
-	g.Use(middleware.Cors, middleware.MiddleLog, gin.Recovery())
+	g.Use(middleware.Cors, middleware.MiddleLog, gin.Recovery(),middleware.InitContext())
 	loadRouter(g)
 	//gin.ReleaseMode
 	gin.SetMode(common.EnvConf.Env.Mode)

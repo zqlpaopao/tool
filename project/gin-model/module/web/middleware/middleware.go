@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/satori/go.uuid"
 	"github.com/zqlpaopao/tool/gin-model/common"
 	strTool "github.com/zqlpaopao/tool/string-byte/src"
 	log "github.com/zqlpaopao/tool/zap-log/src"
@@ -141,4 +142,11 @@ func requestParams(g *gin.Context)(str string,err error){
 		return
 	}
 	return strTool.Bytes2String(b),nil
+}
+
+//InitContext build context.Value
+func InitContext()gin.HandlerFunc{
+	return func(c *gin.Context) {
+		c.Set(common.ContextKey,uuid.NewV4().String())
+	}
 }

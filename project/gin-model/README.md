@@ -1,3 +1,12 @@
+## 服务启动
+### 测试环境
+```
+CONF_PATH=./config/local/   go run cmd/main.go
+```
+### 生产环境
+```
+CONF_PATH=./config/local/  GIN_MODE=release go run cmd/main.go
+```
 ## 服务重启
 服务重启采用了endless
 https://github.com/fvbock/endless
