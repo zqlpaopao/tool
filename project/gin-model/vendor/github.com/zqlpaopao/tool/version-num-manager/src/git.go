@@ -15,20 +15,20 @@ type versionNumManager struct {
 	versionInfo []string
 }
 
-func init(){
-	initVersion()
-}
-
-func initVersion(){
-	if err := NewVersionNumManager(
-		WithNotAuth(false),
-		WithBranch(true),
-		WithPrint(true),
-		WithTag("Version ==========> "),
-	).Do().Error();err != nil{
-		src.PrintRed(err.Error())
-	}
-}
+//func init(){
+//	initVersion()
+//}
+//
+//func initVersion(){
+//	if err := NewVersionNumManager(
+//		WithNotAuth(false),
+//		WithBranch(true),
+//		WithPrint(true),
+//		WithTag("<========== Version Info ==========> "),
+//	).Do().Error();err != nil{
+//		src.PrintRed(err.Error())
+//	}
+//}
 
 //NewVersionNumManager get versionManager
 func NewVersionNumManager(f ...Options) *versionNumManager {
@@ -81,7 +81,16 @@ func (v *versionNumManager) getBranch() {
 
 //print print version
 func (v *versionNumManager) print() {
-	src.PrintGreen(v.option.tag + version)
+	header := "******************************** Version info *****************************************"
+	end := "***************************************************************************************"
+	info := "**           "+v.option.tag
+	for i:= 0;i<len(header)-len(v.option.tag)-15;i++{
+		info += " "
+	}
+	info += "**"
+	src.PrintGreenNoTime(header+`
+`+info+`
+`+end)
 }
 
 //Error get error
