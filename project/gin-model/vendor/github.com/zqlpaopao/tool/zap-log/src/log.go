@@ -177,23 +177,23 @@ type ErrorHandle struct {
 
 // Debug level
 func Debug(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,debugLevel,args)
+	return errHandler.initParams(msg,debugLevel,args...)
 }
 
 // Info level
 func Info(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,infoLevel,args)
+	return errHandler.initParams(msg,infoLevel,args...)
 }
 
 // Warn level
 func Warn(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,warnLevel,args)
+	return errHandler.initParams(msg,warnLevel,args...)
 	//FormatLog(args).Sugar().Warnf(msg)
 }
 
 //Error level
 func Error(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,errorLevel,args)
+	return errHandler.initParams(msg,errorLevel,args...)
 }
 
 // Msg Really write

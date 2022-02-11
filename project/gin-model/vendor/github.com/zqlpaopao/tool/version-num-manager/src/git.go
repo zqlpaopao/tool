@@ -83,8 +83,8 @@ func (v *versionNumManager) getBranch() {
 func (v *versionNumManager) print() {
 	header := "******************************** Version info *****************************************"
 	end := "***************************************************************************************"
-	info := "**           "+v.option.tag
-	for i:= 0;i<len(header)-len(v.option.tag)-15;i++{
+	info := "**           "+version
+	for i:= 0;i<len(header)-len(version)-15;i++{
 		info += " "
 	}
 	info += "**"
