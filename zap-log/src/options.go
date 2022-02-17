@@ -32,11 +32,6 @@ func (l logConfig)WithOptions(opts ...Option) *logConfig {
 	return c
 }
 
-//InfoPathFileName string
-//	warnPathFileName string
-//	WithMaxAge int //*time.Hour
-//	WithRotationCount uint
-//	WithRotationTime int
 
 //InitInfoPathFileName Initialize the log path of info debug
 func InitInfoPathFileName(path string)OptionFunc{
@@ -80,4 +75,52 @@ func InitWithIp(i int8)OptionFunc{
 	}
 }
 
+/*************************************************** syncLogConfig ***************************************************/
 
+type OptionAsync interface {
+	apply(*syncLogConfig)
+}
+type OptionSyncFunc func(*syncLogConfig)
+
+func (f OptionSyncFunc) apply(log *syncLogConfig) {
+	f(log)
+}
+
+//NewAsyncLogConfig init log
+func NewAsyncLogConfig(f... OptionAsync){
+	logAsync = &syncLogConfig{
+		buffSize:  syncBuffSize,
+		syncGoNum: syncGoNum,
+		poolHandler :&pool{},
+	}
+	logAsync.WithOptions(f...).initSyncGoPool()
+}
+
+//clone is copy
+func (log *syncLogConfig) clone() *syncLogConfig {
+	cy := *log
+	return &cy
+}
+
+//WithOptions Why is there no address? In this way, multiple l can be copied without conflict
+func (log syncLogConfig)WithOptions(opts ...OptionAsync) *syncLogConfig {
+	c := log.clone()
+	for _, opt := range opts {
+		opt.apply(c)
+	}
+	return c
+}
+
+//InitLogAsyncBuffSize Initialize log save time
+func InitLogAsyncBuffSize(i int)OptionSyncFunc{
+	return func(l *syncLogConfig) {
+		l.buffSize = i
+	}
+}
+
+//InitLogAsyncGoNum Initialize log go num
+func InitLogAsyncGoNum(i int)OptionSyncFunc{
+	return func(l *syncLogConfig) {
+		l.syncGoNum = i
+	}
+}
