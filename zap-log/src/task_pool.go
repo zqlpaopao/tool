@@ -6,14 +6,30 @@ type Task struct {
 	err string
 }
 
+//resource pool Reuse objects and avoid frequent affectionate objects
+var buffSize *BufferPool
+
+// NewTaskBufferPool creates a new BufferPool bounded to the given size.
+func NewTaskBufferPool(i int) {
+	buffSize = NewBufferPool(i)
+}
+
+//Reset reset resource
+func (t *Task) Reset() {
+	t.f, t.err = nil, ""
+}
+
 //InitTask init task
-func InitTask(argF func(err string), err string) *Task {
-	return &Task{f: argF, err: err}
+func InitTask(argF func(err string), err string) (task *Task) {
+	task = buffSize.Get()
+	task.f, task.err = argF, err
+	return task
 }
 
 //Execute run task
 func (t *Task) Execute() {
 	t.f(t.err)
+	buffSize.Put(t)
 }
 
 /*****************************************协程池角色*******************************/

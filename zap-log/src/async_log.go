@@ -36,7 +36,6 @@ func (e *ErrorHandle) MsgAsync(err string) {
 	logAsync.poolHandler.AddTask(task)
 }
 
-
 //initSyncGoPool Initialize synchronization process pool
 func (log *syncLogConfig) initSyncGoPool() {
 	//创建协程池
