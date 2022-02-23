@@ -94,7 +94,7 @@ func (c *confManager) GetLogsConf() (*viper.Viper, error) {
 	return c.getViper("logs")
 }
 
-func (c *confManager) GetRpcConf() (*viper.Viper, error) {
+func (c *confManager) GetApiConf() (*viper.Viper, error) {
 	return c.getViper("api")
 }
 
