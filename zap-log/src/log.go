@@ -81,7 +81,7 @@ func getEncoder() zapCore.Encoder {
 		EncodeTime: func(t time.Time, enc zapCore.PrimitiveArrayEncoder) {
 			enc.AppendString(t.Format("2006-01-02 15:04:05"))
 		},
-		CallerKey:    "file",
+// 		CallerKey:    "file",
 		EncodeCaller: zapCore.ShortCallerEncoder,
 		EncodeDuration: func(d time.Duration, enc zapCore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
