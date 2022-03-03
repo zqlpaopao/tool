@@ -122,7 +122,7 @@ func MiddleLog(g *gin.Context){
 		RespCode:  g.Writer.Status(),
 		RespInfo:  blw.body.String(),
 	}
-	log.Info(common.WebLogKey,reqInfo).Msg(common.WebLogKey)
+	log.InfoAsync(common.WebLogKey,reqInfo).MsgAsync(common.WebLogKey)
 }
 
 //requestParams 请求参数整理

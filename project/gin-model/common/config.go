@@ -11,3 +11,4 @@ var EnvConf = &Config{
 	},
 }
 
+var LogConf = &LogConfig{}

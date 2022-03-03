@@ -7,19 +7,19 @@ import (
 	"net/http"
 )
 
-type Login struct {
+type Ping struct {
 
 }
 
-func (_ Login) Load(r *gin.Engine){
-	l := r.Group("/fire-timer")
-	l.POST("/login", func(g *gin.Context) {
+func (_ Ping) Load(r *gin.Engine){
+	l := r.Group("/")
+	l.POST("ping", func(g *gin.Context) {
 		fmt.Println(g.GetString(common.ContextKey))
 		g.JSON(http.StatusOK, gin.H{
 			"message": "ok",
 			"code":    200,
 			"data":    map[string]string{
-				"aa":"bb",
+				"aaaa":"ssss",
 			},
 		})
 		return

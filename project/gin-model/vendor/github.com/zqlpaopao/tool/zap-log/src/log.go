@@ -32,11 +32,9 @@ var (
 	IpInfo string
 )
 
-
-func init(){
+func init() {
 	errHandler = new(ErrorHandle)
 }
-
 
 //InitLoggerHandler -- ----------------------------
 //--> @Description  Initialize log processing assistant
@@ -169,35 +167,30 @@ func getStartRotateLogsConf(logConf *logConfig) (op []rotateLogs.Option) {
 //	return log
 //}
 
-type ErrorHandle struct {
-	msg  string
-	args []interface{}
-	tag  int
-}
-
 // Debug level
 func Debug(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,debugLevel,args...)
+	return errHandler.initParams(msg, debugLevel, args)
 }
 
 // Info level
 func Info(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,infoLevel,args...)
+	return errHandler.initParams(msg, infoLevel, args)
 }
 
 // Warn level
 func Warn(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,warnLevel,args...)
+	return errHandler.initParams(msg, warnLevel, args)
 	//FormatLog(args).Sugar().Warnf(msg)
 }
 
 //Error level
 func Error(msg string, args ...interface{}) *ErrorHandle {
-	return errHandler.initParams(msg,errorLevel,args...)
+	return errHandler.initParams(msg, errorLevel, args)
 }
 
 // Msg Really write
 func (e *ErrorHandle) Msg(err string) {
+	defer buffErrSize.Put(e)
 	switch e.tag {
 	case debugLevel:
 		Logger.With(ToJsonIpInfo(), ToJsonData(e.args), ToJsonError(err)).Sugar().Debug(e.msg)

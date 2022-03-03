@@ -31,7 +31,6 @@ func InitEnvConfig() {
 		panic(err)
 	}
 	tidyAuthUrl(common.EnvConf)
-	fmt.Printf("%#v",common.EnvConf)
 }
 
 func tidyAuthUrl(config *common.Config) {

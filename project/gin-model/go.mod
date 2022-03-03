@@ -8,5 +8,5 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.10.1
-	github.com/zqlpaopao/tool v0.0.0-20220211154252-471d9b714fb2
+	github.com/zqlpaopao/tool v0.0.0-20220222150858-2b94fb2e2a79
 )

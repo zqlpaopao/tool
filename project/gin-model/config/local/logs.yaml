@@ -1,2 +1,10 @@
 log:
-  path: ./log-web.log
+  infoPath: ./log-web.log
+  warnPath: ./log-web.log
+  maxAge: 0
+  rotationCount: 0
+  rotationTime: 0
+  withIp: 1
+  bufferSize: 50
+  asyncBuffSize: 2048
+  asyncGoNum: 10

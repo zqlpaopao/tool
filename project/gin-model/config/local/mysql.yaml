@@ -1,0 +1,4 @@
+tag:
+  source: user:password@tcp(地址:3306)/库名?charset=utf8&interpolateParams=true&&parseTime=True&loc=Local
+  max_idle_connections: 2
+  max_open_connections: 2

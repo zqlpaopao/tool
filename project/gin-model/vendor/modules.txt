@@ -82,7 +82,7 @@ github.com/spf13/viper/internal/encoding/yaml
 github.com/subosito/gotenv
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
-# github.com/zqlpaopao/tool v0.0.0-20220211154252-471d9b714fb2
+# github.com/zqlpaopao/tool v0.0.0-20220222150858-2b94fb2e2a79
 ## explicit
 github.com/zqlpaopao/tool/config/src
 github.com/zqlpaopao/tool/format/src

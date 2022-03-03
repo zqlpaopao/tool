@@ -6,10 +6,5 @@ import (
 )
 
 func loadRouter(g *gin.Engine){
-	router.Login{}.Load(g)
-	//router.Project{}.Load(g)
-	//router.User{}.Load(g)
-	//router.Public{}.Load(g)
-	//router.Task{}.Load(g)
-	//router.Log{}.Load(g)
+	router.Ping{}.Load(g)
 }
