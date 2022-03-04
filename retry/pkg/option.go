@@ -35,6 +35,8 @@ func NewOption(opt ...Option)*option{
 	o := &option{
 		retryCount:    retryCount,
 		retryInterval: retryInterval,
+		delayType: WithDefaultDelayType,
+
 	}
 	return o.WithOptions(opt...)
 }
