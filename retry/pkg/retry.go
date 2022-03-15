@@ -58,7 +58,6 @@ func (r *RetryManager) execute(retryableFun RetryableFunc, CustomParams ...inter
 		executeResult = retryableFun()
 		if executeResult {break}else if index >= r.retryConf.retryCount{break}
 		index++
-		fmt.Println("sleep",r.retryConf.retryInterval*r.retryConf.delayType(index))
 		time.Sleep(r.retryConf.retryInterval*r.retryConf.delayType(index))
 	}
 	if r.onCompleteCallback != nil {r.onCompleteCallback(index, executeResult, CustomParams...)}
