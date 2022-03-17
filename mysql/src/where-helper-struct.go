@@ -26,7 +26,6 @@ func GenWhereByStruct(in interface{},tagName string)(string,[]interface{}){
 		if tagTmp =="-"||tagTmp=="" || !b{
 			continue
 		}
-		fmt.Println(vType.Field(i).Name)
 		cons :=strings.Split(tagTmp,",")
 		if !IfZero(vValue.Field(i).Interface()) {
 			var al  = vValue.Field(i)
