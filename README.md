@@ -1,4 +1,5 @@
 # ssh-tool
+通过代理连接线上mysql、redis等
 ```
 if db, err = src2.NewSSHMysqlClient(&src2.Config{
 		Addr:   "xx.xx.xx.xx:22",
@@ -23,117 +24,39 @@ if db, err = src2.NewSSHMysqlClient(&src2.Config{
 5. 支持记录ip信息，多节点部署更容易定位问题
 
 ```
-package main
+go get 或者引入包
 
-import (
-	"fmt"
-	"github.com/zqlpaopao/tool/zap-log/src"
-	"net/http"
-	_ "net/http/pprof"
-	"os"
-	"runtime"
-	"time"
-)
+src.InitLoggerHandler(src.NewLogConfig(
+		src.InitInfoPathFileName("./demo_%Y_%m_%d.log"),
+		src.InitWarnPathFileName("./demo_%Y_%m_%d.log"),
+		src.InitWithMaxAge(0),        //日志最长保存时间，乘以小时 默认禁用
+		src.InitWithRotationCount(0), //保存的最大文件数 //默认禁用
+		src.InitWithRotationTime(0),  //最大旋转时间 默认值1小时
+		src.InitWithIp(1),
+		src.InitBufferSize(50)))
+	//2048 比较合适
+	src.NewAsyncLogConfig(src.InitLogAsyncBuffSize(2048), src.InitLogAsyncGoNum(10))
+```
+基准测试
+```
+write setup code here...
+goos: darwin
+goarch: arm64
+pkg: github.com/zqlpaopao/tool/zap-log
+BenchmarkLog-10                 1000000000               0.3152 ns/op          0 B/op          0 allocs/op
+BenchmarkAsyncLog-10            1000000000               0.2413 ns/op          0 B/op          0 allocs/op
+PASS
+write teardown code here...
+ok      github.com/zqlpaopao/tool/zap-log       8.989s
+```
+1亿次写入，每次快近0.1ns，速度和开启的缓冲池和协程的大小有关
 
-/*
-	提供日志分割和日志保存周期控制
-*/
-
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()/4 + 1)
-	go func() {
-		http.ListenAndServe("127.0.0.1:6001", nil)
-	}()
-	go asyncLog()
-	for {
-		fmt.Println(runtime.NumGoroutine())
-		time.Sleep(200 * time.Second)
-		os.Exit(3)
-	}
-}
-
-/*
-	20s的时间对比，写入相同内容，异步可以写入
+20s的时间写入速度
+```
+20s的时间对比，写入相同内容，异步可以写入
 	238M Feb 17 14:23 demo_2022_02_17.log
  	92M Feb 17 14:26 demo_2022_02_17.log
 	差了三倍
-*/
-func log() {
-	type str struct {
-		name string
-		age  int
-		sex  []int
-	}
-	s := str{
-		name: "name",
-		age:  18,
-		sex:  []int{1, 2, 3, 4},
-	}
-	s1 := str{
-		name: "name1",
-		age:  181,
-		sex:  []int{1, 2, 3, 41},
-	}
-
-	//debug info 是一个级别 warn和errorshi 是一个级别，不同级别可分别记录
-	src.InitLoggerHandler(src.NewLogConfig(
-		src.InitInfoPathFileName("./demo_%Y_%m_%d.log"),
-		src.InitWarnPathFileName("./demo_%Y_%m_%d.log"),
-		src.InitWithMaxAge(0),        //日志最长保存时间，乘以小时 默认禁用
-		src.InitWithRotationCount(0), //保存的最大文件数 //默认禁用
-		src.InitWithRotationTime(0),  //最大旋转时间 默认值1小时
-		src.InitWithIp(1),
-		src.InitBufferSize(50)))
-
-	for {
-		src.Info("InfoAsync", s).Msg("InfoAsync")
-
-		src.Warn("WarnAsync", s).Msg("WarnAsync")
-
-		src.Debug("DebugAsync", s1).Msg("DebugAsync")
-
-		src.Error("ErrorAsync", s1).Msg("ErrorAsync")
-	}
-
-}
-
-func asyncLog() {
-	type str struct {
-		name string
-		age  int
-		sex  []int
-	}
-	s := str{
-		name: "name",
-		age:  18,
-		sex:  []int{1, 2, 3, 4},
-	}
-	s1 := str{
-		name: "name1",
-		age:  181,
-		sex:  []int{1, 2, 3, 41},
-	}
-
-	//debug info 是一个级别 warn和errorshi 是一个级别，不同级别可分别记录
-	src.InitLoggerHandler(src.NewLogConfig(
-		src.InitInfoPathFileName("./demo_%Y_%m_%d.log"),
-		src.InitWarnPathFileName("./demo_%Y_%m_%d.log"),
-		src.InitWithMaxAge(0),        //日志最长保存时间，乘以小时 默认禁用
-		src.InitWithRotationCount(0), //保存的最大文件数 //默认禁用
-		src.InitWithRotationTime(0),  //最大旋转时间 默认值1小时
-		src.InitWithIp(1),
-		src.InitBufferSize(50)))
-	//src.Debug("Debug",s).Msg("Debug")
-	//2048 比较合适
-	src.NewAsyncLogConfig(src.InitLogAsyncBuffSize(2048), src.InitLogAsyncGoNum(10))
-	for {
-		src.InfoAsync("InfoAsync", s).MsgAsync("InfoAsync")
-		src.WarnAsync("WarnAsync", s).MsgAsync("WarnAsync")
-		src.DebugAsync("DebugAsync", s1).MsgAsync("DebugAsync")
-		src.ErrorAsync("ErrorAsync", s1).MsgAsync("ErrorAsync")
-	}
-}
-
 ```
 
 ## string-byte
@@ -141,10 +64,8 @@ string-byte 包支持string到[]byte的转换，不会有err信息，nil的[]byt
 会比string([]byte())和 []byte(string) 快
 
 ## ip
-获取本季ip信息
+获取机的ip信息，支持ipv6
 
-## format
-待颜色的输出字体，红色和绿色
 
 ## config
 获取配置文件内容 viper封装
