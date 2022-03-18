@@ -135,3 +135,24 @@ func main(){
 //支持 每次重试回调方法RegisterRetryCallback
 //支持 重试完成回调方法，结果看b bool RegisterCompleteCallback
 ```
+## redis lua 脚本
+
+原子递增
+```
+//IncrNum num 增加操作
+//KEYS[1] 是key
+//ARGV[1] 是总数
+//ARGV[2] 要增加的数值
+//ARGV[3] 过期时间，默认是-1
+//1 是成功 返回增加后的值
+//2 是失败 返回现在的值或者错误
+```
+原子操作
+```
+//GetStrSetStr string 操作，获取key是否存在，不存在设置key及过期时间
+//1代表成功，2代表失败
+//没有对设置key的过程结果做处理
+```
+```
+"github.com/zqlpaopao/tool/redis/pkg"
+```
