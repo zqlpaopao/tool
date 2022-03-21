@@ -69,3 +69,26 @@ const HSetANdExpire = `
 	end
 	redis.pcall('EXPIRE',key,expired)
 `
+
+//SetExpireByTTl 设置key的expire，如果存在，则设置为剩余时间加上当前时间
+//KEYS[1] key
+//ARGV[1] 要设置过着延长的时间,如果存在，且当前是-1，则设置为传入的
+//ARGV[2] value
+const SetExpireByTTl = `
+	local redisKeys = redis.call('GET',KEYS[1]); 
+	local ttl = 0; 
+	if not redisKeys 
+	then 
+		redis.call('SET',KEYS[1],ARGV[1]);
+		redis.call('EXPIRE', KEYS[1], ARGV[2]);
+	else
+		ttl = redis.call('ttl',KEYS[1]); 
+		if (ttl > 0  or ttl == -1)
+		then 
+			ttl = ttl + ARGV[2];
+		else 
+			ttl = ARGV[2]  
+		end
+		redis.call('EXPIRE', KEYS[1], ttl);
+	end
+`
