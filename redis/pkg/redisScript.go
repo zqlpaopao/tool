@@ -50,3 +50,22 @@ const IncrNum = `
 	if expire > 0 then  redis.call('EXPIRE', KEYS[1], expire) end
 	return res;
 `
+
+//HSetANdExpire hash set 操作，设置成员并设置过期时间
+//KEYS[1] 设置的hash key
+//ARGV[1] 要设置的成员的个数
+//ARGV[2] 过期时间
+//1 key 2 1000 field1 value1 field2 value2
+const HSetANdExpire = `
+	local fieldIndex=3
+	local valueIndex=4
+	local key=KEYS[1]
+	local fieldCount=ARGV[1]
+	local expired=ARGV[2]
+	for i=1,fieldCount,1 do
+	  redis.pcall('HSET',key,ARGV[fieldIndex],ARGV[valueIndex])
+	  fieldIndex=fieldIndex+2
+	  valueIndex=valueIndex+2
+	end
+	redis.pcall('EXPIRE',key,expired)
+`
