@@ -5,8 +5,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/pyroscope-io/client/pyroscope"
 	"github.com/zqlpaopao/tool/glock/pkg"
-	randString "github.com/zqlpaopao/tool/rand-string/pkg"
-	"os"
 	"runtime/debug"
 	"time"
 )
@@ -23,8 +21,6 @@ import (
 */
 
 func main() {
-	fmt.Println(randString.RandGenString(randString.RandSourceLetterAndNumber,6))
-os.Exit(2)
 	pyroscope.Start(pyroscope.Config{
 		ApplicationName: "master.app",
 

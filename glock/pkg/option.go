@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"github.com/go-redis/redis/v8"
+	randString "github.com/zqlpaopao/tool/rand-string/pkg"
 	"time"
 )
 
@@ -58,8 +59,7 @@ func clone() *option {
 		seizeCycle:   DefaultSeizeTIme,
 		expire:       DefaultExpireTIme,
 		redisTimeout: DefaultRedisTimeOut,
-		//todo default
-		key:             "",
+		key:             randString.RandGenString(randString.RandSourceLetterAndNumber,8),
 		RenewalOften:    DefaultRenewalTime,
 		redisClient:     &redis.Client{},
 		lockSuccessFunc: nil,
