@@ -13,6 +13,7 @@ require (
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
+	github.com/pyroscope-io/client v0.2.1
 	github.com/schollz/progressbar/v3 v3.8.5
 	github.com/spf13/viper v1.10.1
 	github.com/urfave/cli/v2 v2.3.0

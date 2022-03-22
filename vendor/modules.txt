@@ -86,6 +86,11 @@ github.com/pelletier/go-toml
 github.com/pingcap/errors
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/pyroscope-io/client v0.2.1
+## explicit
+github.com/pyroscope-io/client/internal/flameql
+github.com/pyroscope-io/client/internal/sortedmap
+github.com/pyroscope-io/client/pyroscope
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
 # github.com/russross/blackfriday/v2 v2.0.1
