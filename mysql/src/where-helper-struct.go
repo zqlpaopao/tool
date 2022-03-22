@@ -10,7 +10,7 @@ import (
 )
 
 //GenWhereByStruct Get the where SQL according to the structure
-func GenWhereByStruct(in interface{})(string,[]interface{}){
+func GenWhereByStruct(in interface{},tagName string)(string,[]interface{}){
 	vValue :=reflect.ValueOf(in)
 	if !checkArgsStr(vValue){
 		return "",nil
@@ -21,12 +21,11 @@ func GenWhereByStruct(in interface{})(string,[]interface{}){
 	var args = make([]interface{},0)
 	var b bool
 	for i:=0;i<vValue.NumField();i++{
-		tagTmp = vType.Field(i).Tag.Get("column")
+		tagTmp = vType.Field(i).Tag.Get(tagName)
 		b,_ = pkg.StringFromAssertionFloatNotZero(vType.Field(i).Type.String(),vValue.Field(i))
 		if tagTmp =="-"||tagTmp=="" || !b{
 			continue
 		}
-		fmt.Println(vType.Field(i).Name)
 		cons :=strings.Split(tagTmp,",")
 		if !IfZero(vValue.Field(i).Interface()) {
 			var al  = vValue.Field(i)

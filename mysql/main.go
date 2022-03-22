@@ -71,7 +71,7 @@ func getWhereSqlByStruct(){
 
 	}
 
-	fmt.Println(mysql.GenWhereByStruct(tmp))
+	fmt.Println(mysql.GenWhereByStruct(tmp,"column"))
 }
 
 // getWhereSqlBySlice
