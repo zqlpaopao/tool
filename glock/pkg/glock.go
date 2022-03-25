@@ -12,6 +12,7 @@ import (
 
 type gLock struct {
 	isMaster bool
+	seizeTag bool
 	opt      *option
 	err      error
 	reTry    *pkg.RetryManager
@@ -31,7 +32,9 @@ func NewGlock(f ...Option) Glock {
 //Lock Start locking. If you turn on the short sign, you will always try to lock
 func (g *gLock) Lock(arg ...interface{}) Glock {
 	g.checkRedis()
-	if g.err != nil{return g}
+	if g.err != nil {
+		return g
+	}
 	g.setNx(arg...)
 	go g.renewalOften()
 	g.joinMemberGroup()
@@ -47,7 +50,7 @@ func (g *gLock) setNx(arg ...interface{}) {
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultRedisTimeOut)
 	defer cancel()
-	if isMaster, err = g.opt.redisClient.SetNX(ctx, Lock, Master, time.Duration(g.opt.expire)*time.Second).Result(); err != nil {
+	if isMaster, err = g.opt.redisClient.SetNX(ctx, g.opt.masterKey, Master, time.Duration(g.opt.expire)*time.Second).Result(); err != nil {
 		return
 	}
 	g.setMaster(isMaster)
@@ -55,7 +58,7 @@ func (g *gLock) setNx(arg ...interface{}) {
 }
 
 //check redisClient
-func (g *gLock)checkRedis(){
+func (g *gLock) checkRedis() {
 	_, g.err = g.opt.redisClient.Ping(context.TODO()).Result()
 }
 
@@ -125,7 +128,7 @@ func (g *gLock) makScript() string {
 func (g *gLock) doRenewal(script string, renewal uint) {
 	if script != "" {
 		g.reTry.DoSync(func() bool {
-			if _, err := g.opt.redisClient.EvalSha(context.Background(), script, []string{Lock}, Master, int(renewal)).Result(); !redisScript.IsRedisNilError(err) {
+			if _, err := g.opt.redisClient.EvalSha(context.Background(), script, []string{g.opt.masterKey}, Master, int(renewal)).Result(); !redisScript.IsRedisNilError(err) {
 				return false
 			}
 			return true
@@ -133,7 +136,7 @@ func (g *gLock) doRenewal(script string, renewal uint) {
 		return
 	}
 	g.reTry.DoSync(func() bool {
-		if _, err := g.opt.redisClient.Eval(context.Background(), script, []string{Lock}, Master, int(renewal)).Result(); !redisScript.IsRedisNilError(err) {
+		if _, err := g.opt.redisClient.Eval(context.Background(), script, []string{g.opt.masterKey}, Master, int(renewal)).Result(); !redisScript.IsRedisNilError(err) {
 			return false
 		}
 		return true
@@ -180,10 +183,10 @@ func (g *gLock) UnLock() Glock {
 		if !g.IsMaster() {
 			return true
 		}
-		if _, err := g.opt.redisClient.Del(context.Background(), Lock).Result(); err != nil {
+		if _, err := g.opt.redisClient.Del(context.Background(), g.opt.masterKey).Result(); err != nil {
 			return false
 		}
-		if _, err := g.opt.redisClient.HDel(context.Background(), memberGroup,g.opt.key).Result(); err != nil {
+		if _, err := g.opt.redisClient.HDel(context.Background(), memberGroup, g.opt.key).Result(); err != nil {
 			return false
 		}
 		g.setMaster(false)
