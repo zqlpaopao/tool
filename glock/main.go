@@ -65,6 +65,7 @@ func main() {
 		pkg.WithExpireTime(5),                        //master的超时时间
 		pkg.WithRenewalOften(pkg.DefaultRenewalTime), //如果抢到master，续期多长时间,默认expire的一半
 		pkg.WithRedisClient(redis),
+		pkg.WithMasterKey("master"),//master标识，一个项目可能需要多个不同master的抢锁操作，有默认值
 		pkg.WithLockFailFunc(func(i ...interface{}) { //抢锁失败回调函数
 			for _, v := range i {
 				fmt.Println("传入的参数", v)
@@ -77,18 +78,18 @@ func main() {
 		}),
 	)
 
+	gLock.Lock(i, i1)
 
 	for {
-		gLock.Lock(i, i1)
 
-		fmt.Println(gLock.GetMembers())
+		fmt.Println(gLock.GetMembers())//全部竞争锁的成员
 
-		fmt.Println(gLock.IsMaster())
-		fmt.Println(gLock.Error())
-		gLock.UnLock()
+		fmt.Println(gLock.IsMaster())//是否是master
+		fmt.Println(gLock.Error()) //获取失败原因
 
 		time.Sleep(5 * time.Second)
 	}
 
+	gLock.UnLock()
 
 }
