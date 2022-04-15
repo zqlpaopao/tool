@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -75,7 +76,6 @@ END:
 
 }
 
-
 type CustomResponseWriter struct {
 	gin.ResponseWriter
 	body *bytes.Buffer
@@ -92,7 +92,7 @@ func (w CustomResponseWriter) WriteString(s string) (int, error) {
 }
 
 //MiddleLog 记录请求、响应日志
-func MiddleLog(g *gin.Context){
+func MiddleLog(g *gin.Context) {
 	// 开始时间
 	startTime := time.Now()
 	blw := &CustomResponseWriter{body: bytes.NewBufferString(""), ResponseWriter: g.Writer}
@@ -108,7 +108,7 @@ func MiddleLog(g *gin.Context){
 		req string
 		err error
 	)
-	if req ,err = requestParams(g);nil != err{
+	if req, err = requestParams(g); nil != err {
 		req = err.Error()
 	}
 	reqInfo := &common.ReqLogInfo{
@@ -122,32 +122,32 @@ func MiddleLog(g *gin.Context){
 		RespCode:  g.Writer.Status(),
 		RespInfo:  blw.body.String(),
 	}
-	log.InfoAsync(common.WebLogKey,reqInfo).MsgAsync(common.WebLogKey)
+	log.InfoAsync(common.WebLogKey, reqInfo).MsgAsync(common.WebLogKey)
 }
 
 //requestParams 请求参数整理
-func requestParams(g *gin.Context)(str string,err error){
-	if g.Request.Method == "GET"{
-		return g.Request.RequestURI,nil
+func requestParams(g *gin.Context) (str string, err error) {
+	if g.Request.Method == "GET" {
+		return g.Request.RequestURI, nil
 	}
 	var (
 		par *multipart.Form
-		b []byte
+		b   []byte
 	)
-	if par ,err = g.MultipartForm();nil != err{
+	if par, err = g.MultipartForm(); nil != err {
 		return
 	}
 
-	if b, err = json.Marshal(par.Value); nil != err{
+	if b, err = json.Marshal(par.Value); nil != err {
 		return
 	}
-	return strTool.Bytes2String(b),nil
+	return strTool.Bytes2String(b), nil
 }
 
 //InitContext build context.Value
-func InitContext()gin.HandlerFunc{
+func InitContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(common.ContextKey,uuid.NewV4().String())
+		c.Set(common.ContextKey, uuid.NewV4().String())
 	}
 }
 
