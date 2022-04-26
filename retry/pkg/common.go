@@ -3,9 +3,8 @@ package pkg
 import "time"
 
 const (
-	//retry times
-	retryCount = 3
-	//retry interval
-	retryInterval  = 3*time.Second
+	//RetryCount retry times
+	RetryCount = 3
+	//RetryInterval retry interval
+	RetryInterval = 3 * time.Second
 )
-
