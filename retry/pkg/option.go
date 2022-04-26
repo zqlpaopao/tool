@@ -31,12 +31,11 @@ func(o OpFunc)apply(opt *option){
 }
 
 //NewOption make option
-func NewOption(opt ...Option)*option{
+func NewOption(opt ...Option) *option {
 	o := &option{
-		retryCount:    retryCount,
-		retryInterval: retryInterval,
-		delayType: WithDefaultDelayType,
-
+		retryCount:    RetryCount,
+		retryInterval: RetryInterval,
+		delayType:     WithDefaultDelayType,
 	}
 	return o.WithOptions(opt...)
 }
