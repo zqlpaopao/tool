@@ -226,3 +226,17 @@ func ToJsonIpInfo() zap.Field {
 	z := zap.Any("localIp", IpInfo)
 	return z
 }
+
+//GetCallerInfoForLog caller info
+func GetCallerInfoForLog() (caller *CallerInfo) {
+	pc, file, line, ok := runtime.Caller(1)
+	if !ok {
+		return
+	}
+	caller = &CallerInfo{
+		FileLine: line,
+		FuncName: runtime.FuncForPC(pc).Name(),
+		FilePath: file,
+	}
+	return
+}
