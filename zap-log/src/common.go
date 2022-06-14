@@ -6,3 +6,9 @@ const (
 	maxSyncBuffSize = 67021478
 	bufferMax       = 500
 )
+
+type CallerInfo struct {
+	FileLine int
+	FuncName string
+	FilePath string
+}
