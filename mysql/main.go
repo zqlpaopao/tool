@@ -20,6 +20,67 @@ func main(){
 	GetGormClientV2()
 
 }
+func getUpdate(){
+	var u  []*mysql.UpdateInfo
+		item := mysql.UpdateInfo{
+			TableName: "age_name",
+			SetCase: map[string]string{
+				"name" : "id",
+				"addr" : "id",
+			},
+			WhenThen: map[string]map[string]string{
+				"name" :{
+					"1" : "name1",
+					"2" : "name12",
+					"3" : "name13",
+				},
+				"mac_addr":{
+					"1" : "addr1",
+					"2" : "addr2",
+					"3" : "addr3",
+				},
+			},
+			Where: map[string][]string{
+				"id":{
+					"1",
+					"2",
+					"3",
+				},
+			},
+		}
+
+	item1 := mysql.UpdateInfo{
+		TableName: "dev_arp_table",
+		SetCase: map[string]string{
+			"if_name" : "arp_item_id",
+			"mac_addr" : "arp_item_id",
+		},
+		WhenThen: map[string]map[string]string{
+			"if_name" :{
+				"1" : "if_name1-1",
+				"2" : "if_name1-2",
+				"3" : "if_name1-3",
+			},
+			"mac_addr":{
+				"1" : "mac_addr1-1",
+				"2" : "mac_addr2-2",
+				"3" : "mac_addr3-3",
+			},
+		},
+		Where: map[string][]string{
+			"arp_item_id":{
+				"1",
+				"2",
+				"3",
+			},
+		},
+	}
+
+	u = append(u,&item)
+	u = append(u,&item1)
+
+	fmt.Println(mysql.GetUpdateBatch(u))
+}
 
 
 // -------------------------------------------------- -------------------------------------------------//
