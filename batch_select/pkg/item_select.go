@@ -62,6 +62,7 @@ func (o *option) getBaseData() {
 		res         []map[string]interface{}
 		err         error
 		minMax      *MinMaxInfo
+		sql         = o.orderColumn + " = "
 	)
 	defer o.savePanicFunc(o.table)
 	if maxBaseInfo, err = o.getMaxMinInfo(); nil != err {
@@ -72,7 +73,11 @@ func (o *option) getBaseData() {
 		//close(o.resCh)
 		return
 	}
-	if res, err = o.getResInfo(o.sqlWhere + " and " + o.orderColumn + " = " + maxBaseInfo.Min); nil != err {
+	sql += maxBaseInfo.Min
+	if "" != strings.Trim(o.sqlWhere, " ") {
+		sql += " and " + o.sqlWhere
+	}
+	if res, err = o.getResInfo(sql); nil != err {
 		o.retryFind(nil, err)
 		return
 	}
@@ -128,9 +133,13 @@ func (o *option) getRes(v *MinMaxInfo) {
 		last   string
 	)
 	if !o.OrderId {
-		sqlStr = o.sqlWhere + " and " + o.orderColumn + " > " + v.MinId
+		sqlStr = o.orderColumn + " > " + v.MinId
 	} else {
-		sqlStr = o.sqlWhere + " and " + o.orderColumn + " > " + v.MinId + " and " + o.orderColumn + " <= " + v.MaxId
+		sqlStr = o.orderColumn + " > " + v.MinId + " and " + o.orderColumn + " <= " + v.MaxId
+	}
+
+	if "" != strings.Trim(o.sqlWhere, " ") {
+		sqlStr += " and " + o.sqlWhere
 	}
 	if res, err = o.getResInfo(sqlStr); nil != err {
 		o.retryFind(v, err)
