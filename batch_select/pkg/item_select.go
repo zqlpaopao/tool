@@ -68,7 +68,9 @@ func (o *option) getBaseData() {
 		panic(err)
 	}
 	if maxBaseInfo == (MaxMinInfo{}) {
-		panic("get maxMinInfo is fail")
+		close(o.minWhereCh)
+		//close(o.resCh)
+		return
 	}
 	if res, err = o.getResInfo(o.sqlWhere + " and " + o.orderColumn + " = " + maxBaseInfo.Min); nil != err {
 		o.retryFind(nil, err)
