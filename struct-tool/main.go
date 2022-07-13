@@ -12,7 +12,7 @@ type Mes struct {
 }
 
 func main() {
-
+	map2Struct()
 }
 
 func struct2map() {
@@ -30,17 +30,30 @@ func struct2map() {
 	fmt.Println(pkg.StructSlice2Map(mes1, "cover", []string{}...))
 }
 
+
+type P struct {
+	Name string `cover:"name"`
+	Id float64 `json:"id"`
+	Sex string `json:"sex"`
+}
+
 func map2Struct() {
 	type User struct {
 		Name string
 		ID   int
 	}
 
-	m := map[string]interface{}{}
-	m["Name"] = "test"
-	m["ID"] = 100
-	user := new(User)
-	err := pkg.Map2Struct(user, m)
-	fmt.Println(err)
-	fmt.Printf("%#v", user)
+	a := []map[string]interface{}{
+		{"id": 213.3, "name": "zhaoliu", "sex": "男"},
+	}
+	var s []*P
+
+	err := pkg.SliceMapToSliceStruct(a, &s, "cover")
+	if err != nil {
+		panic(err)
+	}
+	for _ ,v := range s{
+		fmt.Printf("%#v",v)
+
+	}
 }
