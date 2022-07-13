@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"github.com/zqlpaopao/tool/stringHelper/pkg"
 	"strconv"
 	"strings"
 	"time"
@@ -24,35 +23,8 @@ func (o *option) check() error {
 //Run tidy other info
 func (o *option) Run() {
 	o.getBaseData()
-	o.wg.Add(o.handleGoNum)
-	for i := 0; i < o.handleGoNum; i++ {
-		go o.doing()
-	}
-	go o.revResCh()
-	o.wg.Wait()
-	close(o.resCh)
-}
-
-//revResCh tidy the result and call back func
-func (o *option) revResCh() {
-	defer o.savePanicFunc(o.table)
-LABEL:
-	for {
-		select {
-		case v, ok := <-o.resCh:
-			if !ok {
-				break LABEL
-			}
-			if o.callFunc != nil {
-				o.callFunc(v)
-				*v = make([]map[string]interface{}, 0, o.limit)
-				o.putResMap(*v)
-			}
-		default:
-			time.Sleep(500 * time.Millisecond)
-		}
-	}
-	o.revWg.Done()
+	o.producer()
+	o.consumer()
 }
 
 //getBaseData get base data ,will run all
@@ -61,7 +33,6 @@ func (o *option) getBaseData() {
 		maxBaseInfo MaxMinInfo
 		res         []map[string]interface{}
 		err         error
-		minMax      *MinMaxInfo
 		sql         = o.orderColumn + " = "
 	)
 	defer o.savePanicFunc(o.table)
@@ -70,10 +41,9 @@ func (o *option) getBaseData() {
 	}
 	if maxBaseInfo == (MaxMinInfo{}) {
 		close(o.minWhereCh)
-		//close(o.resCh)
 		return
 	}
-	sql += maxBaseInfo.Min
+	sql += "'" + maxBaseInfo.Min + "'"
 	if "" != strings.Trim(o.sqlWhere, " ") {
 		sql += " and " + o.sqlWhere
 	}
@@ -82,30 +52,52 @@ func (o *option) getBaseData() {
 		return
 	}
 	o.resCh <- &res
-	o.maxInfo, minMax = maxBaseInfo.Max, o.getMaxId(&MinMaxInfo{}, maxBaseInfo.Min)
-	o.minWhereCh <- minMax
+	if err = o.OrderIdDebug(&maxBaseInfo); nil != err {
+		panic(err)
+	}
+	return
 }
 
-//running id get max id
-func (o *option) getMaxId(info *MinMaxInfo, minId string) *MinMaxInfo {
-	var (
-		id  int
-		err error
-	)
-	if !o.OrderId {
-		info.MinId = minId
-		return info
+//OrderIdDebug If it is obtained according to the self increasing ID, create an acquisition interval
+func (o *option) OrderIdDebug(maxBaseInfo *MaxMinInfo) (err error) {
+	var minId, maxId, loop int
+	if minId, err = strconv.Atoi(maxBaseInfo.Min); nil != err {
+		return
 	}
-	if id, err = strconv.Atoi(minId); nil != err {
-		o.retryFind(nil, err)
+	if maxId, err = strconv.Atoi(maxBaseInfo.Max); nil != err {
+		return
 	}
-	info.MinId, info.MaxId = minId, strconv.Itoa(id+o.limit)
-	return info
+	loop = (maxId - minId + o.limit) / o.limit
+	go o.sendMinWhere(minId, loop)
+	return
+}
+
+//sendMinWhere Send to producer
+func (o *option) sendMinWhere(minId, loop int) {
+	for i := 1; i <= loop; i++ {
+		info := &MinMaxInfo{
+			MinId: strconv.Itoa(minId),
+			MaxId: strconv.Itoa(minId + o.limit),
+		}
+		o.minWhereCh <- info
+		minId = minId + o.limit
+	}
+	close(o.minWhereCh)
 }
 
 //doing Handle by yourself every goroutine process
-func (o *option) doing() {
-	defer o.savePanicFunc(o.table)
+func (o *option) producer() {
+	o.wg.Add(o.handleGoNum)
+	for i := 0; i < o.handleGoNum; i++ {
+		go o.producerLoopWorker()
+	}
+	o.wg.Wait()
+	close(o.resCh)
+}
+
+//producerLoopWorker Producers obtain production interval data
+func (o *option) producerLoopWorker() {
+	defer o.savePanicFunc("producerLoopWorker-" + o.table)
 LABEL:
 	for {
 		select {
@@ -116,7 +108,7 @@ LABEL:
 			if v == nil {
 				continue
 			}
-			o.getRes(v)
+			o.producerDbData(v)
 		default:
 			time.Sleep(500 * time.Millisecond)
 		}
@@ -125,19 +117,13 @@ LABEL:
 }
 
 //getRes get every item result
-func (o *option) getRes(v *MinMaxInfo) {
+func (o *option) producerDbData(v *MinMaxInfo) {
 	var (
 		sqlStr = ""
 		err    error
 		res    = o.getResMap()
-		last   string
 	)
-	if !o.OrderId {
-		sqlStr = o.orderColumn + " > " + v.MinId
-	} else {
-		sqlStr = o.orderColumn + " > " + v.MinId + " and " + o.orderColumn + " <= " + v.MaxId
-	}
-
+	sqlStr = o.orderColumn + " > '" + v.MinId + "' and " + o.orderColumn + " <= " + "'" + v.MaxId + "'"
 	if "" != strings.Trim(o.sqlWhere, " ") {
 		sqlStr += " and " + o.sqlWhere
 	}
@@ -145,20 +131,10 @@ func (o *option) getRes(v *MinMaxInfo) {
 		o.retryFind(v, err)
 		return
 	}
-	if len(res) < 1 && !o.OrderId {
+	if len(res) < 1 {
 		return
 	}
-	if len(res) < 1 && o.OrderId {
-		o.retryFind(o.getMaxId(v, v.MaxId), nil)
-		return
-	}
-	last = pkg.StringFromAssertionFloat(res[len(res)-1][o.orderColumn])
 	o.resCh <- &res
-	if last == o.maxInfo {
-		close(o.minWhereCh)
-		return
-	}
-	o.retryFind(o.getMaxId(v, last), nil)
 }
 
 //retryFind put back the min id
@@ -169,4 +145,36 @@ func (o *option) retryFind(id *MinMaxInfo, err error) {
 	if nil != err {
 		o.err = append(o.err, err)
 	}
+}
+
+//consumer
+func (o *option) consumer() {
+	o.revWg.Add(o.handleRevGoNum)
+	for i := 0; i < o.handleRevGoNum; i++ {
+		go o.revResCh()
+	}
+	o.revWg.Wait()
+	o.wgAll.Done()
+}
+
+//revResCh tidy the result and call back func
+func (o *option) revResCh() {
+	defer o.savePanicFunc("revResCh-" + o.table)
+LABEL:
+	for {
+		select {
+		case v, ok := <-o.resCh:
+			if !ok {
+				break LABEL
+			}
+			if o.callFunc != nil && v != nil && len(*v) > 0 {
+				o.callFunc(v)
+				*v = make([]map[string]interface{}, 0, o.limit+1)
+				o.putResMap(*v)
+			}
+		default:
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+	o.revWg.Done()
 }
