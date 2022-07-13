@@ -19,8 +19,10 @@ type Option interface {
 
 type option struct {
 	debug         bool
-	OrderId         bool
+	//OrderId         bool
+	//orderColumnIsTime         bool
 	handleGoNum   int
+	handleRevGoNum   int
 	limit         int
 	resChanSize   int
 	maxInfo       string
@@ -36,6 +38,7 @@ type option struct {
 	savePanicFunc SavePanic
 	wg            *sync.WaitGroup
 	revWg         *sync.WaitGroup
+	wgAll         *sync.WaitGroup
 	mysqlCli      *gorm.DB
 }
 
@@ -54,20 +57,21 @@ func (o OpFunc) apply(opt *option) {
 func clone() *option {
 	return &option{
 		debug:         false,
-		OrderId:         false,
 		limit:         Limit,
 		handleGoNum:   HandleGoNum,
+		handleRevGoNum:   HandleGoNum,
 		resChanSize:   ChanSize,
 		table:         "",
 		orderColumn:   "",
 		sqlWhere:      "",
 		selectFiled:   "*",
-		minWhereCh:    make(chan *MinMaxInfo, 1),
+		minWhereCh:    nil,
 		resPool:       nil,
 		resCh:         nil,
 		savePanicFunc: defaultSavePanic,
 		wg:            &sync.WaitGroup{},
 		revWg:         &sync.WaitGroup{},
+		wgAll:         &sync.WaitGroup{},
 		mysqlCli:      nil,
 		err:           make([]error, 0, 1),
 	}
@@ -84,7 +88,7 @@ func (o *option) WithOptions(opt ...Option) *option {
 
 //initParams Initialization parameters
 func (o *option) initParams() {
-	o.resCh, o.resPool = make(chan *[]map[string]interface{}, o.resChanSize), make(chan []map[string]interface{}, o.handleGoNum/3)
+	o.resCh, o.resPool,o.minWhereCh = make(chan *[]map[string]interface{}, o.resChanSize), make(chan []map[string]interface{}, o.handleGoNum/3),make(chan *MinMaxInfo,o.handleGoNum)
 	if o.debug {
 		o.mysqlCli = o.mysqlCli.Debug()
 	}
@@ -94,13 +98,6 @@ func (o *option) initParams() {
 func WithDebug(debug bool) OpFunc {
 	return func(o *option) {
 		o.debug = debug
-	}
-}
-
-//WithOrderId debug mysql
-func WithOrderId(debug bool) OpFunc {
-	return func(o *option) {
-		o.OrderId = debug
 	}
 }
 
@@ -115,6 +112,12 @@ func WithLimit(size int) OpFunc {
 func WithHandleGoNum(num int) OpFunc {
 	return func(o *option) {
 		o.handleGoNum = num
+	}
+}
+//WithHandleRevGoNum Number of goroutine rev
+func WithHandleRevGoNum(num int) OpFunc {
+	return func(o *option) {
+		o.handleRevGoNum = num
 	}
 }
 
