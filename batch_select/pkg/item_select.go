@@ -31,9 +31,7 @@ func (o *option) Run() {
 func (o *option) getBaseData() {
 	var (
 		maxBaseInfo MaxMinInfo
-		res         []map[string]interface{}
 		err         error
-		sql         = o.orderColumn + " = "
 	)
 	defer o.savePanicFunc(o.table)
 	if maxBaseInfo, err = o.getMaxMinInfo(); nil != err {
@@ -43,15 +41,6 @@ func (o *option) getBaseData() {
 		close(o.minWhereCh)
 		return
 	}
-	sql += "'" + maxBaseInfo.Min + "'"
-	if "" != strings.Trim(o.sqlWhere, " ") {
-		sql += " and " + o.sqlWhere
-	}
-	if res, err = o.getResInfo(sql); nil != err {
-		o.retryFind(nil, err)
-		return
-	}
-	o.resCh <- &res
 	if err = o.OrderIdDebug(&maxBaseInfo); nil != err {
 		panic(err)
 	}
@@ -110,7 +99,7 @@ LABEL:
 			}
 			o.producerDbData(v)
 		default:
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 	o.wg.Done()
@@ -123,7 +112,7 @@ func (o *option) producerDbData(v *MinMaxInfo) {
 		err    error
 		res    = o.getResMap()
 	)
-	sqlStr = o.orderColumn + " > '" + v.MinId + "' and " + o.orderColumn + " <= " + "'" + v.MaxId + "'"
+	sqlStr = o.orderColumn + " >= '" + v.MinId + "' and " + o.orderColumn + " < " + "'" + v.MaxId + "'"
 	if "" != strings.Trim(o.sqlWhere, " ") {
 		sqlStr += " and " + o.sqlWhere
 	}
@@ -173,7 +162,7 @@ LABEL:
 				o.putResMap(*v)
 			}
 		default:
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 	o.revWg.Done()
