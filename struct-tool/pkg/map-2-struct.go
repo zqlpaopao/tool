@@ -2,237 +2,148 @@ package pkg
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
-	"time"
 )
 
-//Map2Struct Map to struct
-func Map2Struct(sv interface{}, m map[string]interface{}) (err error) {
-	val := reflect.ValueOf(sv)
-	if val.Kind() != reflect.Ptr {
-		return errors.New("non-pointer passed to Unmarshal")
+//判断是否是int大类
+func isIntType(k reflect.Kind, values interface{}) (bool, interface{}) {
+	switch k {
+	case reflect.Uint8:
+		return true, uint8(values.(int64))
+	case reflect.Uint16:
+		return true, uint16(values.(int64))
+	case reflect.Uint32:
+		return true, uint32(values.(int64))
+	case reflect.Uint64:
+		return true, uint64(values.(int64))
+	case reflect.Int8:
+		return true, int8(values.(int64))
+	case reflect.Int16:
+		return true, int16(values.(int64))
+	case reflect.Int32:
+		return true, int32(values.(int64))
+	case reflect.Int64:
+		return true, values
+	default:
+		return false, nil
 	}
-	v := val.Elem()
+}
 
-	typ := v.Type()
-	if v.Kind() != reflect.Struct {
-		return errors.New("params error")
+//判断是否float大类
+func isFloatType(k reflect.Kind, values interface{}) (bool, interface{}) {
+	switch k {
+	case reflect.Float32:
+		return true, float32(values.(float64))
+	case reflect.Float64:
+		return true, values
+	default:
+		return false, nil
+	}
+}
+
+//SliceMapToSliceStruct slice的map转slice的struct
+func SliceMapToSliceStruct(mList []map[string]interface{}, model interface{}, tagName string) (err error) {
+	val := reflect.Indirect(reflect.ValueOf(model))
+	typ := val.Type()
+	items := make([]reflect.Value, 0, len(mList))
+	for _, r := range mList {
+		mVal := reflect.Indirect(reflect.New(typ.Elem().Elem())).Addr()
+		err = MapToStruct(&r, mVal.Interface(), tagName)
+		if err != nil {
+			return err
+		}
+		items = append(items, mVal)
+	}
+	values := reflect.Append(val, items...)
+	val.Set(values)
+	return err
+}
+
+//MapToStruct map转struct，map的key和struct的key有小写要求
+func MapToStruct(m, s interface{}, tagName string) error {
+	//如果传递的是指针，直接解引用
+	mVal := reflect.Indirect(reflect.ValueOf(m))
+	mValType := mVal.Type()
+	if mValType.Kind() != reflect.Map {
+		return errors.New("类型错误")
 	}
 
-	moreCols := map[string]string{}
-	for i := 0; i < typ.NumField(); i++ {
-		moreCols[strings.ToLower(typ.Field(i).Name)] = typ.Field(i).Name
+	sVal := reflect.Indirect(reflect.ValueOf(s))
+	sValType := sVal.Type()
+	if sValType.Kind() != reflect.Struct {
+		return errors.New("类型错误")
 	}
-	for k, vv := range m {
-		if name, ok := moreCols[strings.ToLower(k)]; ok {
-			kv := v.FieldByName(name)
-			if convertAssign(kv, vv) != nil {
+	for i := 0; i < sVal.NumField(); i++ {
+		//需要先判断是否有tag标签
+		sField := sValType.Field(i)
+		var name string
+		if tagName != "" {
+			name = sField.Tag.Get(tagName)
+		}
+		if name == "" {
+			name = sField.Name
+		}
+		mKey := mVal.MapIndex(reflect.ValueOf(name))
+		if !mKey.IsValid() {
+			continue
+		}
+		if mKey.IsZero() {
+			continue
+		}
+		//由于从map中获取的int值都是默认int，float默认float64，因此需要做特殊处理
+		values := mKey.Elem().Interface()
+		//fmt.Println(values, reflect.TypeOf(values))
+		ok := false
+		switch reflect.TypeOf(values).Kind() {
+		case reflect.Int:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(int)))
+			if !ok {
+				continue
+			}
+		case reflect.Int32:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(int32)))
+			if !ok {
+				continue
+			}
+		case reflect.Int64:
+			ok, values = isIntType(sField.Type.Kind(), values)
+			if !ok {
+				continue
+			}
+		case reflect.Float64:
+			ok, values = isFloatType(sField.Type.Kind(), values)
+			if !ok {
+				continue
+			}
+		default:
+			if mKey.Elem().Type() != sField.Type {
 				continue
 			}
 		}
+		sValField := sVal.Field(i)
+		if sValField.CanSet() {
+			sValField.Set(reflect.ValueOf(values))
+		}
 	}
-	return
+	return nil
 }
 
-// convertAssign copies to dest the value in src, converting it if possible.
-// An error is returned if the copy would result in loss of information.
-// dest should be a pointer type.
-func convertAssign(dest reflect.Value, src interface{}) error {
-	// Common cases, without reflect.
-	switch s := src.(type) {
-	case string:
-		switch dest.Kind() {
-		case reflect.String:
-			if dest.CanSet() {
-				dest.SetString(s)
-				return nil
-			}
-		case reflect.Slice:
-			if dest.CanSet() {
-				if dest.Elem().Kind() == reflect.Uint8 {
-					dest.SetBytes([]byte(s))
-					return nil
-				}
-			}
-		}
-	case []byte:
-		switch dest.Kind() {
-		case reflect.String:
-			if dest.CanSet() {
-				dest.SetString(string(s))
-				return nil
-			}
-		case reflect.Slice:
-			if dest.CanSet() {
-				if dest.Elem().Kind() == reflect.Uint8 {
-					dest.SetBytes(s)
-					return nil
-				}
-			}
-		}
-	case time.Time:
-		switch dest.Kind() {
-		case reflect.String:
-			if dest.CanSet() {
-				dest.SetString(s.Format(time.RFC3339Nano))
-				return nil
-			}
-		case reflect.Slice:
-			if dest.CanSet() {
-				if dest.Elem().Kind() == reflect.Uint8 {
-					dest.SetBytes([]byte(s.Format(time.RFC3339Nano)))
-					return nil
-				}
-			}
-		}
-	case nil:
-		if dest.CanSet() {
-			dest.SetPointer(nil)
-		}
+//StructToMap map转struct，可以指定map的value类型和struct的key有小写要求
+func StructToMap(s interface{}) (error, *map[string]interface{}) {
+	sVal := reflect.Indirect(reflect.ValueOf(s))
+	sType := sVal.Type()
+	if sType.Kind() != reflect.Struct {
+		return errors.New("类型错误"), nil
 	}
-
-	sv := reflect.ValueOf(src)
-
-	switch dest.Kind() {
-	case reflect.String:
-		if dest.CanSet() {
-			switch sv.Kind() {
-			case reflect.Bool,
-				reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-				reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-				reflect.Float32, reflect.Float64:
-				dest.SetString(asString(src))
-				return nil
-			}
-
+	//读取map的key和value的类型，类型不同，不能转换
+	res := make(map[string]interface{}, sVal.NumField())
+	for i := 0; i < sVal.NumField(); i++ {
+		key := sType.Field(i).Name
+		val := sVal.FieldByIndex([]int{i})
+		if !val.IsValid() {
+			continue
 		}
-	case reflect.Slice:
-		if dest.Elem().Kind() == reflect.Uint8 {
-			sv = reflect.ValueOf(src)
-			if b, ok := asBytes(nil, sv); ok {
-				dest.SetBytes(b)
-				return nil
-			}
-		}
-	case reflect.Bool:
-		if dest.CanSet() {
-			switch sv.Kind() {
-			case reflect.Bool:
-				dest.SetBool(sv.Bool())
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				dest.SetBool(sv.Int() != 0)
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				dest.SetBool(int(sv.Uint()) != 0)
-			case reflect.Float32, reflect.Float64:
-				dest.SetBool(int(sv.Float()) != 0)
-				return nil
-			}
-		}
-	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
-		if dest.CanSet() {
-			switch sv.Kind() {
-			case reflect.Bool:
-				if sv.Bool() {
-					dest.SetInt(1)
-				} else {
-					dest.SetInt(0)
-				}
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				dest.SetInt(sv.Int())
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				dest.SetInt(int64(sv.Uint()))
-			case reflect.Float32, reflect.Float64:
-				dest.SetInt(int64(sv.Float()))
-				return nil
-			}
-		}
-	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
-		if dest.CanSet() {
-			switch sv.Kind() {
-			case reflect.Bool:
-				if sv.Bool() {
-					dest.SetUint(1)
-				} else {
-					dest.SetUint(0)
-				}
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				dest.SetUint(uint64(sv.Int()))
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				dest.SetUint(sv.Uint())
-			case reflect.Float32, reflect.Float64:
-				dest.SetUint(uint64(sv.Float()))
-				return nil
-			}
-		}
-	case reflect.Float32, reflect.Float64:
-		if dest.CanSet() {
-			switch sv.Kind() {
-			case reflect.Bool:
-				if sv.Bool() {
-					dest.SetFloat(1)
-				} else {
-					dest.SetFloat(0)
-				}
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				dest.SetFloat(float64(sv.Int()))
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				dest.SetFloat(float64(sv.Uint()))
-			case reflect.Float32, reflect.Float64:
-				dest.SetFloat(sv.Float())
-				return nil
-			}
-		}
+		res[key] = val.Interface()
 	}
-
-	return fmt.Errorf("unsupported Scan, storing driver.Value type %T into type %T", src, dest)
-}
-
-func asString(src interface{}) string {
-	switch v := src.(type) {
-	case string:
-		return v
-	case []byte:
-		return string(v)
-	}
-	rv := reflect.ValueOf(src)
-	switch rv.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return strconv.FormatInt(rv.Int(), 10)
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return strconv.FormatUint(rv.Uint(), 10)
-	case reflect.Float64:
-		return strconv.FormatFloat(rv.Float(), 'g', -1, 64)
-	case reflect.Float32:
-		return strconv.FormatFloat(rv.Float(), 'g', -1, 32)
-	case reflect.Bool:
-		return strconv.FormatBool(rv.Bool())
-	}
-	return fmt.Sprintf("%v", src)
-}
-func asBytes(buf []byte, rv reflect.Value) (b []byte, ok bool) {
-	switch rv.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return strconv.AppendInt(buf, rv.Int(), 10), true
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return strconv.AppendUint(buf, rv.Uint(), 10), true
-	case reflect.Float32:
-		return strconv.AppendFloat(buf, rv.Float(), 'g', -1, 32), true
-	case reflect.Float64:
-		return strconv.AppendFloat(buf, rv.Float(), 'g', -1, 64), true
-	case reflect.Bool:
-		return strconv.AppendBool(buf, rv.Bool()), true
-	case reflect.String:
-		s := rv.String()
-		return append(buf, s...), true
-	}
-	return
-}
-func strconvErr(err error) error {
-	if ne, ok := err.(*strconv.NumError); ok {
-		return ne.Err
-	}
-	return err
+	return nil, &res
 }
