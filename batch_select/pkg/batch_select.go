@@ -29,7 +29,7 @@ func (b *batchSelect) Run(taskName ...string) error {
 		if _, ok := b.batchSelectInfo[taskName[i]]; !ok {
 			return ErrNotHave
 		}
-		b.batchSelectInfo[taskName[i]].revWg.Add(1)
+		b.batchSelectInfo[taskName[i]].wgAll.Add(1)
 		go b.batchSelectInfo[taskName[i]].Run()
 	}
 	return nil
@@ -38,6 +38,6 @@ func (b *batchSelect) Run(taskName ...string) error {
 //Wait  the wait all
 func (b *batchSelect) Wait() {
 	for _, v := range b.batchSelectInfo {
-		v.revWg.Wait()
+		v.wgAll.Wait()
 	}
 }
