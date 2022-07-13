@@ -3,6 +3,7 @@ package pkg
 import (
 	"reflect"
 	"strconv"
+	"time"
 )
 
 //StringFromAssertionFloat Convert to string type
@@ -38,6 +39,8 @@ func StringFromAssertionFloat(number interface{}) string {
 		break
 	case string:
 		numberString = floatOriginal
+	case time.Time:
+		numberString = floatOriginal.String()
 	}
 	return numberString
 }
