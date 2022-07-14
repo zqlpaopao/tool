@@ -24,8 +24,8 @@ func (o *option) getResInfo(sqlWhere string) (res []map[string]interface{}, err 
 		Table(o.table).
 		Select(o.selectFiled).
 		Where(sqlWhere).
-		Limit(o.limit).
-		Order(o.orderColumn).
+		//Limit(o.limit).
+		//Order(o.orderColumn).
 		Find(&res).
 		Error
 	return
