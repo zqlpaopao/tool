@@ -2,17 +2,17 @@ package pkg
 
 import "sync/atomic"
 
-type batchHook struct {
+type BatchHook struct {
 	batchInfo map[string]*option
 }
 
-//NewBatchHook make new batchHook
-func NewBatchHook() *batchHook {
-	return &batchHook{batchInfo: make(map[string]*option)}
+//NewBatchHook make new BatchHook
+func NewBatchHook() *BatchHook {
+	return &BatchHook{batchInfo: make(map[string]*option)}
 }
 
 //InitTask Initialize batch processing hook
-func (b *batchHook) InitTask(task ...InitTaskModel) (err error) {
+func (b *BatchHook) InitTask(task ...InitTaskModel) (err error) {
 	for i := 0; i < len(task); i++ {
 		if err = task[i].check(); nil != err {
 			return
@@ -23,7 +23,7 @@ func (b *batchHook) InitTask(task ...InitTaskModel) (err error) {
 }
 
 //Submit Submit multiple tasks by name
-func (b *batchHook) Submit(items SubmitModel) (err error) {
+func (b *BatchHook) Submit(items SubmitModel) (err error) {
 	if _, ok := b.batchInfo[items.TaskName]; !ok {
 		return ErrNotHave
 	}
@@ -33,14 +33,14 @@ func (b *batchHook) Submit(items SubmitModel) (err error) {
 	if err = b.batchInfo[items.TaskName].check(); nil != err {
 		return
 	}
-	for i := 0;i < len(items.Data);i++{
+	for i := 0; i < len(items.Data); i++ {
 		b.batchInfo[items.TaskName].itemCh <- items.Data[i]
 	}
 	return
 }
 
 //Run Start multiple consumption tasks by name
-func (b *batchHook) Run(taskName ...string) error {
+func (b *BatchHook) Run(taskName ...string) error {
 	for i := 0; i < len(taskName); i++ {
 		if _, ok := b.batchInfo[taskName[i]]; !ok {
 			return ErrNotHave
@@ -54,7 +54,7 @@ func (b *batchHook) Run(taskName ...string) error {
 }
 
 //Release consumption go pool
-func (b *batchHook) Release(taskName ...string) error {
+func (b *BatchHook) Release(taskName ...string) error {
 	for i := 0; i < len(taskName); i++ {
 		if _, ok := b.batchInfo[taskName[i]]; !ok {
 			return ErrNotHave
@@ -69,14 +69,14 @@ func (b *batchHook) Release(taskName ...string) error {
 }
 
 //WaitAll wait all
-func (b *batchHook) WaitAll() {
-	for _ ,v := range b.batchInfo{
+func (b *BatchHook) WaitAll() {
+	for _, v := range b.batchInfo {
 		v.wg.Wait()
 	}
 }
 
 //Wait wait one
-func (b *batchHook) Wait(taskName ...string) error {
+func (b *BatchHook) Wait(taskName ...string) error {
 	for i := 0; i < len(taskName); i++ {
 		if _, ok := b.batchInfo[taskName[i]]; !ok {
 			return ErrNotHave
