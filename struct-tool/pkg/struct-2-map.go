@@ -8,6 +8,77 @@ import (
 
 const Omitempty = "omitempty"
 
+//Struct2Map Convert structure to map
+//s The structure to be converted can be a pointer
+//tagName must When formulating the tag of structure conversion, there must be
+//fields Specifies the field of structure conversion. If there is no field, it is full conversion
+func Struct2Map(s interface{}, tagName string, fields ...string) (map[string]interface{}, error) {
+	if s == nil {
+		return nil, errors.New("struct cannot be empty")
+	}
+	if tagName == "" {
+		return nil, errors.New("tagName parameter cannot be empty")
+	}
+
+	typeOf := reflect.TypeOf(s)
+	valueOf := reflect.ValueOf(s)
+	if typeOf.Kind() == reflect.Ptr {
+		valueOf = valueOf.Elem()
+	}
+	if typeOf.Kind() != reflect.Struct {
+		return nil, errors.New("struct is not being converted")
+	}
+
+	fieldsLen := len(fields)
+	numField := valueOf.NumField()
+
+	allResult := make(map[string]interface{}, numField)
+	result := make(map[string]interface{}, fieldsLen)
+	for k := range fields {
+		result[fields[k]] = 0
+	}
+	if numField == 0 {
+		return nil, errors.New("no fields in the struct")
+	}
+	for i := 0; i < numField; i++ {
+		keySl := typeOf.Field(i).Tag.Get(tagName)
+		kSL := strings.Split(keySl, ",")
+		if len(kSL) < 1 {
+			continue
+		}
+		key := kSL[0]
+		omitempty := ""
+		if len(kSL) >= 2 {
+			omitempty = kSL[1]
+		}
+		value := valueOf.Field(i).Interface()
+		if omitempty == Omitempty && (value == 0 || value == "" || value == nil) {
+			delete(result, key)
+			continue
+		}
+		if valueOf.Field(i).Kind() == reflect.Ptr {
+			if valueOf.Field(i).Elem() == (reflect.Value{}) {
+				delete(result, key)
+				continue
+			}
+			value = valueOf.Field(i).Elem().Interface()
+		}
+		if _, ok := result[key]; !ok {
+			allResult[key] = value
+			continue
+		}
+		result[key] = value
+	}
+	if len(result) == 0 && len(allResult) == 0 {
+		return nil, nil
+	}
+
+	if fieldsLen > 0 {
+		return result, nil
+	}
+	return allResult, nil
+}
+
 // StructSlice2Map
 //s The structure to be converted can be a pointer
 //tagName must When formulating the tag of structure conversion, there must be
@@ -51,21 +122,23 @@ func StructSlice2Map(s interface{}, tagName string, fields ...string) ([]map[str
 		numField := valueOf.NumField()
 		for i := 0; i < numField; i++ {
 			keySl := typeOf.Field(i).Tag.Get(tagName)
-			kSL := strings.Split(keySl,",")
-			if len(kSL) < 1{
+			kSL := strings.Split(keySl, ",")
+			if len(kSL) < 1 {
 				continue
 			}
 			key := kSL[0]
 			omitempty := ""
-			if len(kSL) >= 2{
+			if len(kSL) >= 2 {
 				omitempty = kSL[1]
 			}
 			value := valueOf.Field(i).Interface()
-			if omitempty == Omitempty && (value == 0 || value =="" ||value == nil){
+			if omitempty == Omitempty && (value == 0 || value == "" || value == nil) {
+				delete(elem, key)
 				continue
 			}
 			if valueOf.Field(i).Kind() == reflect.Ptr {
-				if valueOf.Field(i).Elem() == (reflect.Value{}){
+				if valueOf.Field(i).Elem() == (reflect.Value{}) {
+					delete(elem, key)
 					continue
 				}
 				value = valueOf.Field(i).Elem().Interface()
@@ -89,70 +162,3 @@ func StructSlice2Map(s interface{}, tagName string, fields ...string) ([]map[str
 	}
 	return result, nil
 }
-
-
-
-//Struct2Map Convert structure to map
-//s The structure to be converted can be a pointer
-//tagName must When formulating the tag of structure conversion, there must be
-//fields Specifies the field of structure conversion. If there is no field, it is full conversion
-func Struct2Map(s interface{}, tagName string, fields ...string) (map[string]interface{}, error) {
-	if s == nil {
-		return nil, errors.New("struct cannot be empty")
-	}
-	if tagName == "" {
-		return nil, errors.New("tagName parameter cannot be empty")
-	}
-	typeOf := reflect.TypeOf(s)
-	valueOf := reflect.ValueOf(s)
-	if typeOf.Kind() == reflect.Ptr {
-		valueOf = valueOf.Elem()
-	}
-	if typeOf.Kind() != reflect.Struct {
-		return nil, errors.New("struct is not being converted")
-	}
-	fieldsLen := len(fields)
-	numField := valueOf.NumField()
-
-	allResult := make(map[string]interface{}, numField)
-	result := make(map[string]interface{}, fieldsLen)
-	if numField == 0 {
-		return nil, errors.New("no fields in the struct")
-	}
-	for i := 0; i < numField; i++ {
-		keySl := typeOf.Field(i).Tag.Get(tagName)
-		kSL := strings.Split(keySl,",")
-		if len(kSL) < 1{
-			continue
-		}
-		key := kSL[0]
-		omitempty := ""
-		if len(kSL) >= 2{
-			omitempty = kSL[1]
-		}
-		value := valueOf.Field(i).Interface()
-		if omitempty == Omitempty && (value == 0 || value =="" ||value == nil){
-			continue
-		}
-		if valueOf.Field(i).Kind() == reflect.Ptr {
-			if valueOf.Field(i).Elem() == (reflect.Value{}){
-				continue
-			}
-			value = valueOf.Field(i).Elem().Interface()
-		}
-		result[key] = 0
-		if _, ok := result[key]; !ok {
-			allResult[key] = value
-			continue
-		}
-		result[key] = value
-	}
-	if len(result) == 0 && len(allResult) == 0 {
-		return nil, nil
-	}
-	if fieldsLen > 0 {
-		return result, nil
-	}
-	return allResult, nil
-}
-
