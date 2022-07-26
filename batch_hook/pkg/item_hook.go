@@ -74,6 +74,7 @@ func (o *option) doing() {
 		}
 	}
 END:
+	timer.Stop()
 	o.wg.Done()
 }
 
