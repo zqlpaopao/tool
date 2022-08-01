@@ -52,7 +52,19 @@ func Struct2Map(s interface{}, tagName string, fields ...string) (map[string]int
 			omitempty = kSL[1]
 		}
 		value := valueOf.Field(i).Interface()
-		if omitempty == Omitempty && (value == 0 || value == "" || value == nil) {
+		if omitempty == Omitempty &&
+			(value == uint8(0) ||
+				value == uint16(0) ||
+				value == uint32(0) ||
+				value == uint64(0) ||
+				value == int8(0) ||
+				value == int16(0) ||
+				value == int32(0) ||
+				value == int64(0) ||
+				value == float32(0) ||
+				value == float64(0) ||
+				value == "" ||
+				value == nil) {
 			delete(result, key)
 			continue
 		}
