@@ -54,7 +54,6 @@ func Struct2Map(s interface{}, tagName string, fields ...string) (map[string]int
 		value := valueOf.Field(i).Interface()
 		if omitempty == Omitempty &&
 			(value == uint8(0) ||
-				value == uint8(0) ||
 			 	value == uint16(0) ||
 				value == uint32(0) ||
 				value == uint64(0) ||
