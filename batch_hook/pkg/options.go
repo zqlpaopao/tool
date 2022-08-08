@@ -29,13 +29,23 @@ type option struct {
 	hookFunc      HookFunc
 	endHook       EndFunc
 	savePanicFunc SavePanic
-	wg sync.WaitGroup
+	wg            sync.WaitGroup
 }
 
 type OpFunc func(*option)
 
 func NewOption(opt ...Option) *option {
-	o := &option{
+	return clone().WithOptions(opt...)
+}
+
+//apply assignment function entity
+func (o OpFunc) apply(opt *option) {
+	o(opt)
+}
+
+//clone  new object
+func clone() *option {
+	return &option{
 		close:         OPENED,
 		doingSize:     DoingSize,
 		handleGoNum:   HandleGoNum,
@@ -46,30 +56,18 @@ func NewOption(opt ...Option) *option {
 		hookFunc:      nil,
 		endHook:       nil,
 		savePanicFunc: defaultSavePanic,
-		wg :sync.WaitGroup{},
+		wg:            sync.WaitGroup{},
 	}
-	return o.WithOptions(opt...)
-}
 
-//apply assignment function entity
-func (o OpFunc) apply(opt *option) {
-	o(opt)
-}
-
-//clone  new object
-func (o *option) clone() *option {
-	cp := *o
-	return &cp
 }
 
 //WithOptions Execute assignment function entity
-func (o option) WithOptions(opt ...Option) *option {
-	c := o.clone()
+func (o *option) WithOptions(opt ...Option) *option {
 	for _, v := range opt {
-		v.apply(c)
+		v.apply(o)
 	}
-	c.initParams()
-	return c
+	o.initParams()
+	return o
 }
 
 //initParams Initialization parameters
