@@ -23,7 +23,7 @@ func (o *option) check() error {
 //Run tidy other info
 func (o *option) Run() {
 	o.getBaseData()
-	o.producer()
+	go o.producer()
 	o.consumer()
 }
 
