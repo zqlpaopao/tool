@@ -140,3 +140,23 @@ func NewSSHGormClient(sshConfig *Config, mysqlConf *MysqlConfig) (dbClient *gorm
 	dbClient, err = mysqlConf.GormClient(*client)
 	return
 }
+
+//NewSSHGormClient -- ----------------------------
+//--> @Description ssh机器和mysql地址信息
+//--> @Param
+//--> @return
+//-- ----------------------------
+func NewSSHGormV2Client(sshConfig *Config, mysqlConf *MysqlConfig) (dbClient *V2.DB, err error) {
+	var (
+		client *Client
+	)
+
+	//get sshClient
+	if client, err = DialWithPasswd(sshConfig); nil != err {
+		return
+	}
+
+	//get db
+	dbClient, err = mysqlConf.GormClientV2(*client)
+	return
+}
