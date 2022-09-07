@@ -116,7 +116,7 @@ func (o *option) producerDbData(v *MinMaxInfo) {
 	if "" != strings.Trim(o.sqlWhere, " ") {
 		sqlStr += " and " + o.sqlWhere
 	}
-	if res, err = o.getResInfo(sqlStr); nil != err {
+	if res, err = o.getResInfo(sqlStr, o.whereCase); nil != err {
 		o.retryFind(v, err)
 		return
 	}
