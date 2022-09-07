@@ -11,19 +11,19 @@ func (o *option) getMaxMinInfo() (maxMinData MaxMinInfo, err error) {
 		o.mysqlCli.
 			Table(o.table).
 			Select("min(" + o.orderColumn + ") as mi," + "max(" + o.orderColumn + ") as ma").
-			Where(o.sqlWhere).
+			Where(o.sqlWhere,o.whereCase...).
 			Take(&maxMinData).
 			Error
 	return
 }
 
 //getResInfo Get data according to conditions
-func (o *option) getResInfo(sqlWhere string) (res []map[string]interface{}, err error) {
+func (o *option) getResInfo(sqlWhere string,whereCase []interface{}) (res []map[string]interface{}, err error) {
 	res = make([]map[string]interface{}, 0, o.limit)
 	err = o.mysqlCli.
 		Table(o.table).
 		Select(o.selectFiled).
-		Where(sqlWhere).
+		Where(sqlWhere,whereCase...).
 		//Limit(o.limit).
 		//Order(o.orderColumn).
 		Find(&res).
