@@ -18,28 +18,29 @@ type Option interface {
 }
 
 type option struct {
-	debug         bool
+	debug bool
 	//OrderId         bool
 	//orderColumnIsTime         bool
-	handleGoNum   int
-	handleRevGoNum   int
-	limit         int
-	resChanSize   int
-	maxInfo       string
-	table         string
-	orderColumn   string
-	sqlWhere      string
-	selectFiled   string
-	minWhereCh    chan *MinMaxInfo
-	resCh         chan *[]map[string]interface{}
-	resPool       chan []map[string]interface{}
-	err           []error
-	callFunc      EndFunc
-	savePanicFunc SavePanic
-	wg            *sync.WaitGroup
-	revWg         *sync.WaitGroup
-	wgAll         *sync.WaitGroup
-	mysqlCli      *gorm.DB
+	handleGoNum    int
+	handleRevGoNum int
+	limit          int
+	resChanSize    int
+	maxInfo        string
+	table          string
+	orderColumn    string
+	sqlWhere       string
+	whereCase      []interface{}
+	selectFiled    string
+	minWhereCh     chan *MinMaxInfo
+	resCh          chan *[]map[string]interface{}
+	resPool        chan []map[string]interface{}
+	err            []error
+	callFunc       EndFunc
+	savePanicFunc  SavePanic
+	wg             *sync.WaitGroup
+	revWg          *sync.WaitGroup
+	wgAll          *sync.WaitGroup
+	mysqlCli       *gorm.DB
 }
 
 type OpFunc func(*option)
@@ -56,24 +57,24 @@ func (o OpFunc) apply(opt *option) {
 //clone  new object
 func clone() *option {
 	return &option{
-		debug:         false,
-		limit:         Limit,
-		handleGoNum:   HandleGoNum,
-		handleRevGoNum:   HandleGoNum,
-		resChanSize:   ChanSize,
-		table:         "",
-		orderColumn:   "",
-		sqlWhere:      "",
-		selectFiled:   "*",
-		minWhereCh:    nil,
-		resPool:       nil,
-		resCh:         nil,
-		savePanicFunc: defaultSavePanic,
-		wg:            &sync.WaitGroup{},
-		revWg:         &sync.WaitGroup{},
-		wgAll:         &sync.WaitGroup{},
-		mysqlCli:      nil,
-		err:           make([]error, 0, 1),
+		debug:          false,
+		limit:          Limit,
+		handleGoNum:    HandleGoNum,
+		handleRevGoNum: HandleGoNum,
+		resChanSize:    ChanSize,
+		table:          "",
+		orderColumn:    "",
+		sqlWhere:       "",
+		selectFiled:    "*",
+		minWhereCh:     nil,
+		resPool:        nil,
+		resCh:          nil,
+		savePanicFunc:  defaultSavePanic,
+		wg:             &sync.WaitGroup{},
+		revWg:          &sync.WaitGroup{},
+		wgAll:          &sync.WaitGroup{},
+		mysqlCli:       nil,
+		err:            make([]error, 0, 1),
 	}
 }
 
@@ -88,7 +89,7 @@ func (o *option) WithOptions(opt ...Option) *option {
 
 //initParams Initialization parameters
 func (o *option) initParams() {
-	o.resCh, o.resPool,o.minWhereCh = make(chan *[]map[string]interface{}, o.resChanSize), make(chan []map[string]interface{}, o.handleGoNum/3),make(chan *MinMaxInfo,o.handleGoNum)
+	o.resCh, o.resPool, o.minWhereCh = make(chan *[]map[string]interface{}, o.resChanSize), make(chan []map[string]interface{}, o.handleGoNum/3), make(chan *MinMaxInfo, o.handleGoNum)
 	if o.debug {
 		o.mysqlCli = o.mysqlCli.Debug()
 	}
@@ -114,6 +115,7 @@ func WithHandleGoNum(num int) OpFunc {
 		o.handleGoNum = num
 	}
 }
+
 //WithHandleRevGoNum Number of goroutine rev
 func WithHandleRevGoNum(num int) OpFunc {
 	return func(o *option) {
@@ -136,9 +138,9 @@ func WithOrderColumn(name string) OpFunc {
 }
 
 //WithSqlWhere where
-func WithSqlWhere(sqlWhere string) OpFunc {
+func WithSqlWhere(sqlWhere string, whereCase []interface{}) OpFunc {
 	return func(o *option) {
-		o.sqlWhere = sqlWhere
+		o.sqlWhere, o.whereCase = sqlWhere, whereCase
 	}
 }
 
