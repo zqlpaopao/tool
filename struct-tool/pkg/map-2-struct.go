@@ -24,6 +24,8 @@ func isIntType(k reflect.Kind, values interface{}) (bool, interface{}) {
 		return true, int32(values.(int64))
 	case reflect.Int64:
 		return true, values
+	case reflect.Int:
+		return true, int(values.(int64))
 	case reflect.Float32:
 		return true, float32(values.(int64))
 	case reflect.Float64:
