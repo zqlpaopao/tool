@@ -48,6 +48,7 @@ func (b *BatchHook) Run(taskName ...string) error {
 		if b.batchInfo[taskName[i]].IsClose() {
 			return ErrTaskClosed
 		}
+		b.batchInfo[taskName[i]].wg.Add(b.batchInfo[taskName[i]].handleGoNum)
 		go b.batchInfo[taskName[i]].Run()
 	}
 	return nil
