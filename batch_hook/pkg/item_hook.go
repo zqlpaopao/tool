@@ -22,7 +22,7 @@ func (o *option) check() error {
 
 //Run tidy other info
 func (o *option) Run() {
-	o.wg.Add(o.handleGoNum)
+	//o.wg.Add(o.handleGoNum)
 	for i := 0; i < o.handleGoNum; i++ {
 		go o.doing()
 	}
