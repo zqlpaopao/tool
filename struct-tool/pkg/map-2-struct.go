@@ -101,11 +101,37 @@ func MapToStruct(m, s interface{}, tagName string) error {
 		//fmt.Println(values, reflect.TypeOf(values))
 		ok := false
 		switch reflect.TypeOf(values).Kind() {
-		case reflect.Int:
-			ok, values = isIntType(sField.Type.Kind(), int64(values.(int)))
+		case reflect.Uint8:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(uint8)))
 			if !ok {
 				continue
 			}
+		case reflect.Uint16:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(uint16)))
+			if !ok {
+				continue
+			}
+		case reflect.Uint32:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(uint32)))
+			if !ok {
+				continue
+			}
+		case reflect.Uint64:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(uint64)))
+			if !ok {
+				continue
+			}
+		case reflect.Int8:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(int8)))
+			if !ok {
+				continue
+			}
+		case reflect.Int16:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(int16)))
+			if !ok {
+				continue
+			}
+
 		case reflect.Int32:
 			ok, values = isIntType(sField.Type.Kind(), int64(values.(int32)))
 			if !ok {
@@ -113,6 +139,11 @@ func MapToStruct(m, s interface{}, tagName string) error {
 			}
 		case reflect.Int64:
 			ok, values = isIntType(sField.Type.Kind(), values)
+			if !ok {
+				continue
+			}
+		case reflect.Int:
+			ok, values = isIntType(sField.Type.Kind(), int64(values.(int)))
 			if !ok {
 				continue
 			}
