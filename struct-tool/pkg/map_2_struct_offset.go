@@ -175,10 +175,6 @@ func Map2StructOver(in interface{}, tagName []*TagName, valMap map[string]interf
 	return
 }
 
-func ModelK(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
-	*(*string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(string)
-}
-
 //******************************************* string **********************************//
 func makeString(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
 	*(*string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(string)
