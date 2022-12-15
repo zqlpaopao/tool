@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
 	"unsafe"
 )
@@ -85,234 +85,208 @@ func (t TypeModel) String() string {
 	return TypeValue[t]
 }
 
-//自定义选择版本
-type tagName struct {
-	Type string
-	key  string
+type (
+	TagName struct {
+		StructName string
+		Type       string
+		MapKey     string
+		Offset     uintPtrDescriptor
+		Fun        Func
+	}
+	modelFace struct {
+		typ   unsafe.Pointer
+		value unsafe.Pointer
+	}
+	uintPtrDescriptor uintptr
+	Func              func(structPoint unsafe.Pointer, ti uintPtrDescriptor, val interface{})
+)
+
+var TypeMap = map[interface{}]Func{
+	StringType.String(): makeString,
+
+	SliceStringType.String(): makeSliceString,
+	SliceIntType.String():    makeSliceInt,
+
+	Uint8Type.String():  makeUint8,
+	Uint16Type.String(): makeUint16,
+	Uint32Type.String(): makeUint32,
+	Uint64Type.String(): makeUint64,
+	UintType.String():   makeUint,
+
+	Int8Type.String():  makeInt8,
+	Int16Type.String(): makeInt16,
+	Int32Type.String(): makeInt32,
+	Int64Type.String(): makeInt64,
+	IntType.String():   makeInt,
+
+	Float32Type.String(): makeFloat32,
+	Float64Type.String(): makeFloat64,
+
+	SliceUint8Type.String():  makeSliceUint8,
+	SliceUint16Type.String(): makeSliceUint16,
+	SliceUint32Type.String(): makeSliceUint32,
+	SliceUint64Type.String(): makeSliceUint64,
+	SliceUintType.String():   makeSliceUint,
+
+	SliceInt8Type.String():  makeSliceInt8,
+	SliceInt16Type.String(): makeSliceInt16,
+	SliceInt32Type.String(): makeSliceInt32,
+	SliceInt64Type.String(): makeSliceInt64,
+	SliceIntType.String():   makeSliceInt,
+
+	SliceFloat32Type.String(): makeSliceFloat32,
+	SliceFloat64Type.String(): makeSliceFloat64,
 }
 
-type uintPtrDescriptor uintptr
-
-func Map2StructOver(m map[string]interface{}, in interface{}, tagName map[string]*tagName) (err error) {
+func DescribeStructUnsafePointer(in interface{}, tagName []*TagName) (err error) {
 	typ := reflect.TypeOf(in)
+	tagNameRef := make([]*TagName, 0, len(tagName))
 	if typ.Kind() != reflect.Ptr {
-		return fmt.Errorf("you must pass in a pointer")
+		err = errors.New("you must pass in a pointer")
+		return
 	}
 	if typ.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf("you must pass in a pointer to a struct")
+		err = errors.New("you must pass in a pointer to a struct")
+		return
 	}
-
 	for k, v := range tagName {
-		f, ok := typ.Elem().FieldByName(k)
+		f, ok := typ.Elem().FieldByName(v.StructName)
 		if !ok {
 			continue
 		}
-		if _, ok := m[v.key]; !ok {
+		tagName[k].Offset = uintPtrDescriptor(f.Offset)
+		fun, ok := TypeMap[tagName[k].Type]
+		if !ok {
 			continue
 		}
-		SwitchType(uintPtrDescriptor(f.Offset), in, v, m[v.key])
+		tagName[k].Fun = fun
+		tagNameRef = append(tagNameRef, v)
+	}
+	tagName = nil
+	tagName = tagNameRef
+	return
+}
+
+func Map2StructOver(in interface{}, tagName []*TagName, valMap map[string]interface{}) (err error) {
+	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
+	for i := 0; i < len(tagName); i++ {
+		tagName[i].Fun(structPtr, tagName[i].Offset, valMap[tagName[i].MapKey])
 	}
 	return
 }
 
-func SwitchType(offset uintPtrDescriptor, in interface{}, tag *tagName, val interface{}) {
-	if tag.Type == StringType.String() {
-		makeString(in, offset, val.(string))
-		//
-	} else if tag.Type == IntType.String() {
-		makeInt(in, offset, val.(int))
-		//
-	} else if tag.Type == SliceStringType.String() {
-		makeSliceString(in, offset, val.([]string))
-	} else if tag.Type == SliceIntType.String() {
-		makeSliceInt(in, offset, val.([]int))
-
-	} else if tag.Type == Int64Type.String() {
-		makeInt64(in, offset, val.(int64))
-	} else if tag.Type == Uint8Type.String() {
-		makeUint8(in, offset, val.(uint8))
-	} else if tag.Type == Uint16Type.String() {
-		makeUint16(in, offset, val.(uint16))
-	} else if tag.Type == Uint32Type.String() {
-		makeUint32(in, offset, val.(uint32))
-	} else if tag.Type == Uint64Type.String() {
-		makeUint64(in, offset, val.(uint64))
-	} else if tag.Type == UintType.String() {
-		makeUint(in, offset, val.(uint))
-		//
-	} else if tag.Type == Int8Type.String() {
-		makeInt8(in, offset, val.(int8))
-	} else if tag.Type == Int16Type.String() {
-		makeInt16(in, offset, val.(int16))
-	} else if tag.Type == Int32Type.String() {
-		makeInt32(in, offset, val.(int32))
-	} else if tag.Type == Float32Type.String() {
-		makeFloat32(in, offset, val.(float32))
-	} else if tag.Type == Float64Type.String() {
-		makeFloat64(in, offset, val.(float64))
-	} else if tag.Type == SliceUint8Type.String() {
-		makeSliceUint8(in, offset, val.([]uint8))
-	} else if tag.Type == SliceUint16Type.String() {
-		makeSliceUint16(in, offset, val.([]uint16))
-	} else if tag.Type == SliceUint32Type.String() {
-		makeSliceUint32(in, offset, val.([]uint32))
-	} else if tag.Type == SliceUint64Type.String() {
-		makeSliceUint64(in, offset, val.([]uint64))
-	} else if tag.Type == SliceUintType.String() {
-		makeSliceUint(in, offset, val.([]uint))
-		//
-	} else if tag.Type == SliceInt8Type.String() {
-		makeSliceInt8(in, offset, val.([]int8))
-	} else if tag.Type == SliceInt16Type.String() {
-		makeSliceInt16(in, offset, val.([]int16))
-	} else if tag.Type == SliceInt32Type.String() {
-		makeSliceInt32(in, offset, val.([]int32))
-	} else if tag.Type == SliceInt64Type.String() {
-		makeSliceInt64(in, offset, val.([]int64))
-		//
-	} else if tag.Type == SliceFloat32Type.String() {
-		makeSliceFloat32(in, offset, val.([]float32))
-	} else if tag.Type == SliceFloat64Type.String() {
-		makeSliceFloat64(in, offset, val.([]float64))
-		//
-	}
-
+func ModelK(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(string)
 }
 
 //******************************************* string **********************************//
-func makeString(in interface{}, ti uintPtrDescriptor, val string) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeString(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(string)
 }
 
 //******************************************* uint8-64 **********************************//
-func makeUint8(in interface{}, ti uintPtrDescriptor, val uint8) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*uint8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeUint8(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*uint8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(uint8)
 }
 
-func makeUint16(in interface{}, ti uintPtrDescriptor, val uint16) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*uint16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeUint16(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*uint16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(uint16)
 }
 
-func makeUint32(in interface{}, ti uintPtrDescriptor, val uint32) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*uint32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeUint32(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*uint32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(uint32)
 }
 
-func makeUint64(in interface{}, ti uintPtrDescriptor, val uint64) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*uint64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeUint64(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*uint64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(uint64)
 }
 
-func makeUint(in interface{}, ti uintPtrDescriptor, val uint) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*uint)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeUint(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*uint)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(uint)
 }
 
 //******************************************* int8-64 **********************************//
-func makeInt8(in interface{}, ti uintPtrDescriptor, val int8) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*int8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeInt8(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*int8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(int8)
 }
 
-func makeInt16(in interface{}, ti uintPtrDescriptor, val int16) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*int16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeInt16(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*int16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(int16)
 }
 
-func makeInt32(in interface{}, ti uintPtrDescriptor, val int32) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*int32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeInt32(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*int32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(int32)
 }
 
-func makeInt64(in interface{}, ti uintPtrDescriptor, val int64) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*int64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeInt64(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*int64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(int64)
 }
 
-func makeInt(in interface{}, ti uintPtrDescriptor, val int) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*int)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeInt(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*int)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(int)
 }
 
 //******************************************* float **********************************//
-func makeFloat32(in interface{}, ti uintPtrDescriptor, val float32) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*float32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeFloat32(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*float32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(float32)
 }
-func makeFloat64(in interface{}, ti uintPtrDescriptor, val float64) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*float64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeFloat64(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*float64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.(float64)
 }
 
 //******************************************* slice string **********************************//
 
-func makeSliceString(in interface{}, ti uintPtrDescriptor, val []string) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceString(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]string)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]string)
 }
 
 //******************************************* slice int **********************************//
-func makeSliceInt(in interface{}, ti uintPtrDescriptor, val []int) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]int)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceInt(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]int)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]int)
 }
 
 //*******************************************  slice uint8-64 **********************************//
-func makeSliceUint8(in interface{}, ti uintPtrDescriptor, val []uint8) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]uint8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceUint8(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]uint8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]uint8)
 }
 
-func makeSliceUint16(in interface{}, ti uintPtrDescriptor, val []uint16) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]uint16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceUint16(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]uint16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]uint16)
 }
 
-func makeSliceUint32(in interface{}, ti uintPtrDescriptor, val []uint32) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]uint32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceUint32(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]uint32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]uint32)
 }
 
-func makeSliceUint64(in interface{}, ti uintPtrDescriptor, val []uint64) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]uint64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceUint64(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]uint64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]uint64)
 }
 
-func makeSliceUint(in interface{}, ti uintPtrDescriptor, val []uint) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]uint)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceUint(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]uint)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]uint)
 }
 
 //*******************************************  slice int8-64 **********************************//
-func makeSliceInt8(in interface{}, ti uintPtrDescriptor, val []int8) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]int8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceInt8(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]int8)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]int8)
 }
 
-func makeSliceInt16(in interface{}, ti uintPtrDescriptor, val []int16) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]int16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceInt16(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]int16)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]int16)
 }
 
-func makeSliceInt32(in interface{}, ti uintPtrDescriptor, val []int32) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]int32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceInt32(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]int32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]int32)
 }
 
-func makeSliceInt64(in interface{}, ti uintPtrDescriptor, val []int64) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]int64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceInt64(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]int64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]int64)
 }
 
 //*******************************************  slice float **********************************//
-func makeSliceFloat32(in interface{}, ti uintPtrDescriptor, val []float32) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]float32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceFloat32(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]float32)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]float32)
 }
-func makeSliceFloat64(in interface{}, ti uintPtrDescriptor, val []float64) {
-	structPtr := (*modelFace)(unsafe.Pointer(&in)).value
-	*(*[]float64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val
+func makeSliceFloat64(structPtr unsafe.Pointer, ti uintPtrDescriptor, val interface{}) {
+	*(*[]float64)(unsafe.Pointer(uintptr(structPtr) + uintptr(ti))) = val.([]float64)
 }
