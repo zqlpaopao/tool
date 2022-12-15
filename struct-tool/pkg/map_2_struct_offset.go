@@ -101,7 +101,7 @@ type (
 	Func              func(structPoint unsafe.Pointer, ti uintPtrDescriptor, val interface{})
 )
 
-var TypeMap = map[interface{}]Func{
+var TypeMap = map[string]Func{
 	StringType.String(): makeString,
 
 	SliceStringType.String(): makeSliceString,
