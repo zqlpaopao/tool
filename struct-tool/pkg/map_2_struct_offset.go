@@ -88,7 +88,7 @@ func (t TypeModel) String() string {
 type (
 	TagName struct {
 		StructName string
-		Type       string
+		Type       TypeModel
 		MapKey     string
 		Offset     uintPtrDescriptor
 		Fun        Func
@@ -101,41 +101,40 @@ type (
 	Func              func(structPoint unsafe.Pointer, ti uintPtrDescriptor, val interface{})
 )
 
-var TypeMap = map[string]Func{
-	StringType.String(): makeString,
+var TypeMap = map[TypeModel]Func{
+	StringType: makeString,
 
-	SliceStringType.String(): makeSliceString,
-	SliceIntType.String():    makeSliceInt,
+	SliceStringType: makeSliceString,
 
-	Uint8Type.String():  makeUint8,
-	Uint16Type.String(): makeUint16,
-	Uint32Type.String(): makeUint32,
-	Uint64Type.String(): makeUint64,
-	UintType.String():   makeUint,
+	Uint8Type:  makeUint8,
+	Uint16Type: makeUint16,
+	Uint32Type: makeUint32,
+	Uint64Type: makeUint64,
+	UintType:   makeUint,
 
-	Int8Type.String():  makeInt8,
-	Int16Type.String(): makeInt16,
-	Int32Type.String(): makeInt32,
-	Int64Type.String(): makeInt64,
-	IntType.String():   makeInt,
+	Int8Type:  makeInt8,
+	Int16Type: makeInt16,
+	Int32Type: makeInt32,
+	Int64Type: makeInt64,
+	IntType:   makeInt,
 
-	Float32Type.String(): makeFloat32,
-	Float64Type.String(): makeFloat64,
+	Float32Type: makeFloat32,
+	Float64Type: makeFloat64,
 
-	SliceUint8Type.String():  makeSliceUint8,
-	SliceUint16Type.String(): makeSliceUint16,
-	SliceUint32Type.String(): makeSliceUint32,
-	SliceUint64Type.String(): makeSliceUint64,
-	SliceUintType.String():   makeSliceUint,
+	SliceUint8Type:  makeSliceUint8,
+	SliceUint16Type: makeSliceUint16,
+	SliceUint32Type: makeSliceUint32,
+	SliceUint64Type: makeSliceUint64,
+	SliceUintType:   makeSliceUint,
 
-	SliceInt8Type.String():  makeSliceInt8,
-	SliceInt16Type.String(): makeSliceInt16,
-	SliceInt32Type.String(): makeSliceInt32,
-	SliceInt64Type.String(): makeSliceInt64,
-	SliceIntType.String():   makeSliceInt,
+	SliceInt8Type:  makeSliceInt8,
+	SliceInt16Type: makeSliceInt16,
+	SliceInt32Type: makeSliceInt32,
+	SliceInt64Type: makeSliceInt64,
+	SliceIntType:   makeSliceInt,
 
-	SliceFloat32Type.String(): makeSliceFloat32,
-	SliceFloat64Type.String(): makeSliceFloat64,
+	SliceFloat32Type: makeSliceFloat32,
+	SliceFloat64Type: makeSliceFloat64,
 }
 
 func DescribeStructUnsafePointer(in interface{}, tagName []*TagName) (err error) {
