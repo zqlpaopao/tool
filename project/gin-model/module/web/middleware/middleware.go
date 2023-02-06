@@ -97,13 +97,6 @@ func MiddleLog(g *gin.Context) {
 	startTime := time.Now()
 	blw := &CustomResponseWriter{body: bytes.NewBufferString(""), ResponseWriter: g.Writer}
 	g.Writer = blw
-	// 处理请求
-	g.Next()
-	// 结束时间
-	endTime := time.Now()
-	// 执行时间
-	latencyTime := endTime.Sub(startTime)
-	//请求参数
 	var (
 		req string
 		err error
@@ -111,6 +104,13 @@ func MiddleLog(g *gin.Context) {
 	if req, err = requestParams(g); nil != err {
 		req = err.Error()
 	}
+	// 处理请求
+	g.Next()
+	// 结束时间
+	endTime := time.Now()
+	// 执行时间
+	latencyTime := endTime.Sub(startTime)
+	//请求参数
 	reqInfo := &common.ReqLogInfo{
 		StartTime: startTime.Format(common.TimeFormat),
 		EndTime:   endTime.Format(common.TimeFormat),
@@ -131,18 +131,27 @@ func requestParams(g *gin.Context) (str string, err error) {
 		return g.Request.RequestURI, nil
 	}
 	var (
-		par *multipart.Form
-		b   []byte
+		par  *multipart.Form
+		data []byte
+		cy   string
 	)
-	if par, err = g.MultipartForm(); nil != err {
-		return
+	cy = g.Request.Header.Get("Content-Type")
+	if cy == common.ApplicationJson {
+		if data, err = ioutil.ReadAll(g.Request.Body); err != nil {
+			return
+		}
+		g.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+		return string(data), nil
+	} else if cy == common.MultipartFormData {
+		if par, err = g.MultipartForm(); nil != err {
+			return
+		}
+		if data, err = json.Marshal(par.Value); nil != err {
+			return
+		}
+		return strTool.Bytes2String(data), nil
 	}
-
-	if b, err = json.Marshal(par.Value); nil != err {
-		return
-	}
-	return strTool.Bytes2String(b), nil
-}
+	return
 
 //InitContext build context.Value
 func InitContext() gin.HandlerFunc {
