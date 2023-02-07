@@ -87,24 +87,53 @@ func openVersionInfo(){
 	}
 }
 
-//设置指定的use the X-Forwarded-For
-//https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
+// 设置指定的use the X-Forwarded-For
+// https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
 // IPv4 地址、IPv4 CIDR、IPv6 地址或 IPv6 CIDR
-//g.SetTrustedProxies([]string{"192.168.1.2"})
-
-//startListen 启动服务
+// g.SetTrustedProxies([]string{"192.168.1.2"})
+// startListen 启动服务
 func startListen(r *gin.Engine) {
+	srv := &http.Server{
+		Addr:    common.EnvConf.Env.Web.Host + ":" + common.EnvConf.Env.Web.Port,
+		Handler: r,
+	}
 	go func() {
-		format.PrintGreen(fmt.Sprintf(" Will listening and serving HTTP on %s:%s", common.EnvConf.Env.Web.Host, common.EnvConf.Env.Web.Port))
-		if common.EnvConf.Env.Mode != gin.DebugMode{
-			if err := endless.ListenAndServe(common.EnvConf.Env.Web.Host + ":" + common.EnvConf.Env.Web.Port, r);nil != err{
-				format.PrintRed("webRun Error: " + err.Error())
+		format.PrintGreen("Listen on  " + common.EnvConf.Env.Web.Host + ":" + common.EnvConf.Env.Web.Port)
+		if err := srv.ListenAndServe(); nil != err && errors.Is(err, http.ErrServerClosed) {
+			format.PrintRed("webRun Error: " + err.Error())
+			if common.EnvConf.Env.Mode == gin.DebugMode {
 				os.Exit(3)
 			}
 		}
-		if err := r.Run(common.EnvConf.Env.Web.Host + ":" + common.EnvConf.Env.Web.Port); nil != err {
-			format.PrintRed("webRun Error: " + err.Error())
-			os.Exit(3)
-		}
 	}()
+	Shutdown(srv)
+}
+
+// Shutdown -- --------------------------
+// --> @Describe
+// --> @params
+// --> @return
+// -- ------------------------------------
+func Shutdown(srv *http.Server) {
+	// wait for interrupt signal to gracefully shut down the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal)
+	// kill (no param) default send syscall.SIGTERM
+	// kill -2 is syscall.SIGINT
+	// kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	format.PrintRed("Shutdown Server ...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		format.PrintRed("Server Shutdown:" + err.Error())
+	}
+	format.PrintRed("Server exiting")
+
+	select {
+	case <-ctx.Done():
+		format.PrintRed("Server exited ...")
+		os.Exit(1)
+	}
 }
