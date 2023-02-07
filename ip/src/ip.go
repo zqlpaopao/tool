@@ -32,26 +32,42 @@ func initIpInfo(){
 //GetLocalIp get local ip
 func (i *ipInfo)getLocalIp(){
 	var (
-		addr []net.Interface
-		byName *net.Interface
+		addr      []net.Interface
+		byName    *net.Interface
 		addresses []net.Addr
-		err error
+		err       error
 	)
-	if addr ,err = net.Interfaces();nil != err{
+	if addr, err = net.Interfaces(); nil != err {
 		return
 	}
-	for _ ,v := range addr{
-		if byName, err = net.InterfaceByName(v.Name);err != nil {
+	for _, v := range addr {
+		if byName, err = net.InterfaceByName(v.Name); err != nil {
 			continue
 		}
-		if addresses, err = byName.Addrs();nil != err{
+		if addresses, err = byName.Addrs(); nil != err {
 			continue
 		}
 		for _, v1 := range addresses {
-			i.ipInfos.Store(byName.Name,v1.String())
+			var ip net.IP
+			switch v := v1.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue
+			}
+			if byName.Name != "en0" && byName.Name != "eth0" {
+				continue
+			}
+			i.ipInfos.Store("eth0",ip.String())
 		}
 	}
-	return
 }
 
 //GetEth0 direct acquisition
