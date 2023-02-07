@@ -12,6 +12,8 @@ import (
 	"github.com/zqlpaopao/tool/gin-model/module/web/middleware"
 	versionInfo "github.com/zqlpaopao/tool/version-num-manager/src"
 	"os"
+	"context"
+	"errors"
 )
 
 func init() {
