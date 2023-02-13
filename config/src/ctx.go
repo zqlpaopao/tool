@@ -36,6 +36,10 @@ func (c *confManager) Init(envItem string) error {
 	return c.InitByPath(confPath)
 }
 
+func (c *confManager) InitOsArgs(confPath string) error {
+	return c.InitByPath(confPath)
+}
+
 func (c *confManager) InitByPath(confPath string) error {
 	if confPath == "" {
 		return errors.New("ConfigManager.Init: config path is empty")
