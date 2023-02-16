@@ -1,14 +1,17 @@
 package common
 
-var EnvConf = &Config{
-	Env: EnvConfig{
-		Web:   WebConfig{
-			NoAuthUrl:    []string{},
-			NoAuthUrlMap: map[string]struct{}{},
+var (
+	EnvConf = &Config{
+		Env: EnvConfig{
+			Web: WebConfig{
+				NoAuthUrl:    []string{},
+				NoAuthUrlMap: map[string]struct{}{},
+			},
+			PProf: Pprof{},
+			Mode:  "",
 		},
-		PProf: Pprof{},
-		Mode : "",
-	},
-}
-
-var LogConf = &LogConfig{}
+	}
+	LogConf = &LogConfig{}
+	//MysqlInfo = &MysqlEnvInfo{}
+	Urls = &ReqAddress{}
+)

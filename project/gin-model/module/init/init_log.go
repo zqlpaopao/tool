@@ -2,19 +2,38 @@ package start
 
 import (
 	"github.com/spf13/viper"
+	"github.com/urfave/cli/v2"
 	config "github.com/zqlpaopao/tool/config/src"
-	"github.com/zqlpaopao/tool/gin-model/common"
+	"github.com/zqlpaopao/tool/project/gin-model/common"
 	log "github.com/zqlpaopao/tool/zap-log/src"
+	"os"
 )
 
 func init() {
-	if err := config.Ctx.Init("CONF_PATH"); nil != err {
+	app := &cli.App{
+		Name:  "DCos",
+		Usage: "DCos controller",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "conf",
+				Aliases:  []string{"c"},
+				Usage:    "config path",
+				Required: true,
+			},
+		},
+		Action: func(c *cli.Context) error {
+			conf := c.String("conf")
+			return Init(conf)
+		},
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
 		panic(err)
 	}
-	InitLog()
 }
 
-//InitLog 初始化日志模块
+// InitLog 初始化日志模块
 func InitLog() {
 	var (
 		logCtx *viper.Viper

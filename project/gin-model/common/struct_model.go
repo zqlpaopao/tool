@@ -2,7 +2,7 @@ package common
 
 import "time"
 
-//Config web 相关
+// Config web 相关
 type Config struct {
 	Env EnvConfig
 }
@@ -27,9 +27,9 @@ type EnvConfig struct {
 	Web         WebConfig
 }
 
-//LogConfig 相关
+// LogConfig 相关
 type LogConfig struct {
-	Log struct{
+	Log struct {
 		InfoPath      string
 		WarnPath      string
 		MaxAge        int
@@ -42,7 +42,7 @@ type LogConfig struct {
 	}
 }
 
-//ReqLogInfo 请求日志记录
+// ReqLogInfo 请求日志记录
 type ReqLogInfo struct {
 	StartTime string
 	EndTime   string
@@ -53,4 +53,17 @@ type ReqLogInfo struct {
 	ReqArgs   string
 	RespCode  int
 	RespInfo  string
+}
+
+type ReqAddress struct {
+	Urls struct {
+		Patch struct {
+			Host         string `json:"host"`
+			InterOpPath  string `json:"inter_op_path"`
+			GetOpPath    string `json:"get_op_path"`
+			Token        string `json:"token"`
+			ReadTimeout  int    `json:"read_timeout"`
+			WriteTimeout int    `json:"write_timeout"`
+		} `json:"project_patch"`
+	} `json:"urls"`
 }

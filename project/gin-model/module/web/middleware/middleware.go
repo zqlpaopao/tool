@@ -8,15 +8,16 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
-	"github.com/zqlpaopao/tool/gin-model/common"
+	"github.com/zqlpaopao/tool/project/gin-model/common"
 	strTool "github.com/zqlpaopao/tool/string-byte/src"
 	log "github.com/zqlpaopao/tool/zap-log/src"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"time"
 )
 
-//Cors 设置请求头信息
+// Cors 设置请求头信息
 func Cors(c *gin.Context) {
 	method := c.Request.Method
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -91,7 +92,7 @@ func (w CustomResponseWriter) WriteString(s string) (int, error) {
 	return w.ResponseWriter.WriteString(s)
 }
 
-//MiddleLog 记录请求、响应日志
+// MiddleLog 记录请求、响应日志
 func MiddleLog(g *gin.Context) {
 	// 开始时间
 	startTime := time.Now()
@@ -125,7 +126,7 @@ func MiddleLog(g *gin.Context) {
 	log.InfoAsync(common.WebLogKey, reqInfo).MsgAsync(common.WebLogKey)
 }
 
-//requestParams 请求参数整理
+// requestParams 请求参数整理
 func requestParams(g *gin.Context) (str string, err error) {
 	if g.Request.Method == "GET" {
 		return g.Request.RequestURI, nil
@@ -152,15 +153,16 @@ func requestParams(g *gin.Context) (str string, err error) {
 		return strTool.Bytes2String(data), nil
 	}
 	return
+}
 
-//InitContext build context.Value
+// InitContext build context.Value
 func InitContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set(common.ContextKey, uuid.NewV4().String())
 	}
 }
 
-//TimeoutMiddleware middleware wraps the request context with a timeou
+// TimeoutMiddleware middleware wraps the request context with a timeou
 func TimeoutMiddleware(timeout time.Duration) func(c *gin.Context) {
 	return func(c *gin.Context) {
 

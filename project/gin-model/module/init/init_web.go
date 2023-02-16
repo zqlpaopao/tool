@@ -1,38 +1,40 @@
 package start
 
 import (
-	"fmt"
-	"github.com/fvbock/endless"
+	"context"
+	"errors"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	config "github.com/zqlpaopao/tool/config/src"
 	format "github.com/zqlpaopao/tool/format/src"
-	"github.com/zqlpaopao/tool/gin-model/common"
-	"github.com/zqlpaopao/tool/gin-model/module/web/middleware"
+	"github.com/zqlpaopao/tool/project/gin-model/common"
+	"github.com/zqlpaopao/tool/project/gin-model/module/web/middleware"
 	versionInfo "github.com/zqlpaopao/tool/version-num-manager/src"
+	"net/http"
 	"os"
-	"context"
-	"errors"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func init() {
 	InitEnvConfig()
 }
 
-//InitEnvConfig 初始化web配置文件
-func InitEnvConfig() {
+// InitEnvConfig 初始化web配置文件
+func InitEnvConfig() (err error) {
 	var (
 		env *viper.Viper
-		err error
 	)
 	if env, err = config.Ctx.GetEnvConf(); nil != err {
-		panic(err)
+		return
 	}
 	if err = env.Unmarshal(common.EnvConf); nil != err {
-		panic(err)
+		return
 	}
 	tidyAuthUrl(common.EnvConf)
+	return err
 }
 
 func tidyAuthUrl(config *common.Config) {
@@ -41,7 +43,7 @@ func tidyAuthUrl(config *common.Config) {
 	}
 }
 
-//InitWeb 初始化web服务
+// InitWeb 初始化web服务
 func InitWeb() {
 	if err := checkArgs(); nil != err {
 		panic(err)
@@ -49,7 +51,7 @@ func InitWeb() {
 	InitGin()
 }
 
-//checkArgs 检测web配置参数
+// checkArgs 检测web配置参数
 func checkArgs() error {
 	if common.EnvConf.Env.Web.Host == "" || common.EnvConf.Env.Web.Port == "" {
 		return common.MsgErrWebListen
@@ -59,7 +61,7 @@ func checkArgs() error {
 
 func InitGin() {
 	g := gin.Default()
-	g.Use(middleware.Cors, middleware.MiddleLog, gin.Recovery(),middleware.InitContext())
+	g.Use(middleware.Cors, middleware.MiddleLog, gin.Recovery(), middleware.InitContext())
 	loadRouter(g)
 	//gin.ReleaseMode
 	gin.SetMode(common.EnvConf.Env.Mode)
@@ -70,21 +72,21 @@ func InitGin() {
 
 }
 
-//开启pprof
-func openPProf(g *gin.Engine){
-	if common.EnvConf.Env.PProf.OpenTag{
+// 开启pprof
+func openPProf(g *gin.Engine) {
+	if common.EnvConf.Env.PProf.OpenTag {
 		pprof.Register(g) // 性能
 	}
 }
 
-//开启版本信息
-func openVersionInfo(){
+// 开启版本信息
+func openVersionInfo() {
 	if err := versionInfo.NewVersionNumManager(
 		versionInfo.WithNotAuth(false),
 		versionInfo.WithBranch(true),
 		versionInfo.WithPrint(true),
 		versionInfo.WithTag("Version Info "),
-	).Do().Error();err != nil{
+	).Do().Error(); err != nil {
 		format.PrintRed(err.Error())
 	}
 }
@@ -130,6 +132,9 @@ func Shutdown(srv *http.Server) {
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		format.PrintRed("Server Shutdown:" + err.Error())
+		if common.EnvConf.Env.Mode == gin.DebugMode {
+			os.Exit(3)
+		}
 	}
 	format.PrintRed("Server exiting")
 
