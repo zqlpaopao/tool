@@ -126,6 +126,10 @@ func (c *confManager) GetCronConf() (*viper.Viper, error) {
 	return c.getViper("cron")
 }
 
+func (c *confManager) GetGraphConf() (*viper.Viper, error) {
+	return c.getViper("graph")
+}
+
 func (c *confManager) GetLogLayout(project string, file string) (logPath string, err error) {
 	viperOb, err := c.GetLogsConf()
 	if err != nil {
