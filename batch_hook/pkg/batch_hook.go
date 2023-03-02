@@ -1,18 +1,24 @@
 package pkg
 
-import "sync/atomic"
+import (
+	"sync"
+	"sync/atomic"
+)
 
 type BatchHook struct {
+	lock *sync.RWMutex
 	batchInfo map[string]*option
 }
 
 //NewBatchHook make new BatchHook
 func NewBatchHook() *BatchHook {
-	return &BatchHook{batchInfo: make(map[string]*option)}
+	return &BatchHook{lock:&sync.RWMutex{},batchInfo: make(map[string]*option)}
 }
 
 //InitTask Initialize batch processing hook
 func (b *BatchHook) InitTask(task ...InitTaskModel) (err error) {
+	b.lock.Lock()
+	defer b.lock.Unlock()
 	for i := 0; i < len(task); i++ {
 		if err = task[i].check(); nil != err {
 			return
@@ -24,6 +30,8 @@ func (b *BatchHook) InitTask(task ...InitTaskModel) (err error) {
 
 //Submit Submit multiple tasks by name
 func (b *BatchHook) Submit(items SubmitModel) (err error) {
+	b.lock.RLock()
+	defer b.lock.RUnlock()
 	if _, ok := b.batchInfo[items.TaskName]; !ok {
 		return ErrNotHave
 	}
@@ -41,6 +49,8 @@ func (b *BatchHook) Submit(items SubmitModel) (err error) {
 
 //Run Start multiple consumption tasks by name
 func (b *BatchHook) Run(taskName ...string) error {
+	b.lock.RLock()
+	defer b.lock.RUnlock()
 	for i := 0; i < len(taskName); i++ {
 		if _, ok := b.batchInfo[taskName[i]]; !ok {
 			return ErrNotHave
@@ -56,6 +66,8 @@ func (b *BatchHook) Run(taskName ...string) error {
 
 //Release consumption go pool
 func (b *BatchHook) Release(taskName ...string) error {
+	b.lock.RLock()
+	defer b.lock.RUnlock()
 	for i := 0; i < len(taskName); i++ {
 		if _, ok := b.batchInfo[taskName[i]]; !ok {
 			return ErrNotHave
@@ -78,6 +90,8 @@ func (b *BatchHook) WaitAll() {
 
 //Wait wait one
 func (b *BatchHook) Wait(taskName ...string) error {
+	b.lock.RLock()
+	defer b.lock.RUnlock()
 	for i := 0; i < len(taskName); i++ {
 		if _, ok := b.batchInfo[taskName[i]]; !ok {
 			return ErrNotHave
