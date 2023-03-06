@@ -106,6 +106,10 @@ func (c *confManager) GetRpcConf() (*viper.Viper, error) {
 	return c.getViper("rpc")
 }
 
+func (c *confManager) GetOrderConf() (*viper.Viper, error) {
+	return c.getViper("order")
+}
+
 func (c *confManager) GetAlarmConf() (*viper.Viper, error) {
 	return c.getViper("alarm")
 }
