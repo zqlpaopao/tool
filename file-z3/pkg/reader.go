@@ -179,7 +179,7 @@ func (r *ReaderMan) Callback(b *[]byte) {
 		return
 	}
 	for {
-		if atomic.LoadInt64(&r.Opt.curCustomer) < 100 {
+		if atomic.LoadInt64(&r.Opt.curCustomer) < r.Opt.ReadWorkerNum {
 			go r.runningGo(b)
 			break
 		}
