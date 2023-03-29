@@ -162,6 +162,5 @@ func DefaultSavePanic() {
 	if err := recover(); nil != err {
 		fmt.Println(err)
 		fmt.Println(string(debug.Stack()))
-		os.Exit(3)
 	}
 }
