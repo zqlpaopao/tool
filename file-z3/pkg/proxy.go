@@ -19,7 +19,6 @@ type File interface {
 
 type PublicFunc interface {
 	Error() []error
-	Code() int
 	GetResp() *Resp
 }
 
@@ -65,11 +64,6 @@ func (d *Proxy) GetResp() *Resp {
 // Get Device related get operation
 func (d *Proxy) Error() []error {
 	return d.operation.Error()
-}
-
-// Code Device related get operation
-func (d *Proxy) Code() int {
-	return d.operation.Code()
 }
 
 // Do The agent performs real entity operation
