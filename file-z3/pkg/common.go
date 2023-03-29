@@ -5,9 +5,12 @@ import "errors"
 const (
 	ByteDataSize  = 0x51199
 	CacheByteChSi = 0x199999
-	DataChanSize  = 0x999399
-	WorkerBUm     = 0x100
-	End           = 'n'
+	Customer      = 100
+	ReaderSize    = 0x49999
+	DataChSize    = 50000
+	WorkerBUm     = 0x9
+	ReadWorkerNum = 100
+	End           = '\n'
 )
 
 var (
