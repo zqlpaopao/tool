@@ -15,7 +15,7 @@ type Option struct {
 	CacheByteChSi int
 	curCustomer   int64
 	ReaderSize    int
-	ReadWorkerNum int
+	ReadWorkerNum int64
 	WorkerNum     int
 	Customer      int64
 	DataChSize    int
