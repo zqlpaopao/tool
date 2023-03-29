@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"os"
 	"runtime/debug"
 )
 
