@@ -10,13 +10,14 @@ const (
 	DefaultExpireTIme   = 3               //s
 	DefaultSeizeTIme    = 1 * time.Second //s
 	DefaultRedisTimeOut = 3 * time.Second //s
+	Term                = 10              //s
 	memberGroup         = "member:group:"
 	Lock                = "member:master"
 	Master              = "master"
 	Slave               = "slave"
 )
 
-//GetHostName get host name
+// GetHostName get host name
 func GetHostName() (serverHostName string, err error) {
 	contents, err := ioutil.ReadFile("/etc/hostname")
 	if err == nil {
