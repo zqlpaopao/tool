@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/pyroscope-io/client/pyroscope"
 	"github.com/zqlpaopao/tool/glock/pkg"
 	"runtime/debug"
 	"time"
@@ -21,31 +20,31 @@ import (
 */
 
 func main() {
-	pyroscope.Start(pyroscope.Config{
-		ApplicationName: "master.app",
-
-		// replace this with the address of pyroscope server
-		ServerAddress:   "http://127.0.0.1:4040",
-
-		// you can disable logging by setting this to nil
-		Logger:          pyroscope.StandardLogger,
-
-		// optionally, if authentication is enabled, specify the API key:
-		// AuthToken: os.Getenv("PYROSCOPE_AUTH_TOKEN"),
-
-		// by default all profilers are enabled,
-		// but you can select the ones you want to use:
-		ProfileTypes: []pyroscope.ProfileType{
-			pyroscope.ProfileCPU,
-			pyroscope.ProfileAllocObjects,
-			pyroscope.ProfileAllocSpace,
-			pyroscope.ProfileInuseObjects,
-			pyroscope.ProfileInuseSpace,
-		},
-	})
+	//pyroscope.Start(pyroscope.Config{
+	//	ApplicationName: "master.app",
+	//
+	//	// replace this with the address of pyroscope server
+	//	ServerAddress:   "http://127.0.0.1:4040",
+	//
+	//	// you can disable logging by setting this to nil
+	//	Logger:          pyroscope.StandardLogger,
+	//
+	//	// optionally, if authentication is enabled, specify the API key:
+	//	// AuthToken: os.Getenv("PYROSCOPE_AUTH_TOKEN"),
+	//
+	//	// by default all profilers are enabled,
+	//	// but you can select the ones you want to use:
+	//	ProfileTypes: []pyroscope.ProfileType{
+	//		pyroscope.ProfileCPU,
+	//		pyroscope.ProfileAllocObjects,
+	//		pyroscope.ProfileAllocSpace,
+	//		pyroscope.ProfileInuseObjects,
+	//		pyroscope.ProfileInuseSpace,
+	//	},
+	//})
 
 	defer func() {
-		if err := recover();nil != err{
+		if err := recover(); nil != err {
 			fmt.Println(err)
 			fmt.Println(string(debug.Stack()))
 		}
@@ -60,12 +59,13 @@ func main() {
 	gLock := pkg.NewGlock(
 		pkg.WithSeizeTag(true),                       //持续争夺还是只是一次
 		pkg.WithSeizeCycle(2*time.Second),            //持续争夺还是只是一次
+		pkg.WithTerm(10),                             //持续争夺还是只是一次,单位s
 		pkg.WithLockKey("key"),                       //争多的标识
 		pkg.WithRedisTimeout(3*time.Second),          //redis的操作超时时间,默认3s
 		pkg.WithExpireTime(5),                        //master的超时时间
 		pkg.WithRenewalOften(pkg.DefaultRenewalTime), //如果抢到master，续期多长时间,默认expire的一半
 		pkg.WithRedisClient(redis),
-		pkg.WithMasterKey("master"),//master标识，一个项目可能需要多个不同master的抢锁操作，有默认值
+		pkg.WithMasterKey("master"), //master标识，一个项目可能需要多个不同master的抢锁操作，有默认值
 		pkg.WithLockFailFunc(func(i ...interface{}) { //抢锁失败回调函数
 			for _, v := range i {
 				fmt.Println("传入的参数", v)
@@ -82,12 +82,13 @@ func main() {
 
 	for {
 
-		fmt.Println(gLock.GetMembers())//全部竞争锁的成员
+		fmt.Println(gLock.GetMembers()) //全部竞争锁的成员
 
-		fmt.Println(gLock.IsMaster())//是否是master
-		fmt.Println(gLock.Error()) //获取失败原因
+		fmt.Println(gLock.IsMaster()) //是否是master
+		fmt.Println(gLock.Error())    //获取失败原因
 
 		time.Sleep(5 * time.Second)
+		break
 	}
 
 	gLock.UnLock()
