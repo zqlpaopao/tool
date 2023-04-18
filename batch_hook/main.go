@@ -75,10 +75,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := b.Run("test1"); nil != err {
-		fmt.Println(err)
-		os.Exit(4)
-	}
+	b.Run()
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -87,9 +85,6 @@ func main() {
 			if i1 > 20 {
 				goto END
 			}
-			item := pkg.SubmitModel[User]{
-				TaskName: "test1",
-			}
 			for i := 0; i < 5; i++ {
 				i1++
 				user := User{Name: "Jinzhu", Age: 0, Role: "Admin", Salary: 200000}
@@ -97,14 +92,10 @@ func main() {
 				user.Age = user.Age + i
 				user.Name = user.Name + strconv.Itoa(i1)
 				user.Role = user.Role + strconv.Itoa(i1)
-				item.Data = append(item.Data, user)
+				b.Submit(&user)
 				//item.Item.Params = append(item.Item.Params,user)
 				time.Sleep(time.Second)
 
-			}
-			if err := b.Submit(item); nil != err {
-				fmt.Println(err)
-				os.Exit(2)
 			}
 		}
 	END:
@@ -120,12 +111,10 @@ func main() {
 
 	time.Sleep(20 * time.Second)
 	wg.Wait()
-	if err := b.Release("test1"); nil != err {
-		fmt.Println(err)
-		os.Exit(21)
-	}
 
-	b.WaitAll()
+	b.Release()
+
+	b.Wait()
 	//_ = b.Wait([]string{"test1", "test2"}...)
 	fmt.Println(";;;;;;;;;;;;;;;;;;;;;;;;;")
 
