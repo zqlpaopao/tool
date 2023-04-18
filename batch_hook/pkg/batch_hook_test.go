@@ -80,73 +80,67 @@ func BenchmarkInsert(b *testing.B) {
 func BenchmarkNewBatchHook(b *testing.B) {
 	t := time.Now()
 	var err error
-	df := NewBatchHook()
-	task := []InitTaskModel{
-		{
-			TaskName: "test1",
-			Opt: []Option{
-				WithWaitTime(2 * time.Second),
-				WithLoopTime(1 * time.Second),
-				WithChanSize(1000),
-				WithDoingSize(3000),
-				WithHandleGoNum(3),
-				WithHookFunc(func(item []interface{}) bool {
-					//fmt.Println("======len(item)=======", len(item))
-					//fmt.Println("=============", i)
-					var arpHosts []Test1
-					for _, vl := range item {
-						if v1, ok := vl.(Test1); ok {
-							arpHosts = append(arpHosts, v1)
-						} else {
-							os.Exit(1)
-						}
-					}
-					//fmt.Println("len(arpHosts)",len(arpHosts))
-					//fmt.Println(len(arpHosts)/3000)
-					//os.Exit(2)
-					//for i := 0;i < len(arpHosts)/3000;i++{
-					//	var info = arpHosts[i*3000:i*3000+3000]
-					if err = DB.
-						Model(&Test1{}).
-						//Debug().
-						Create(&arpHosts).
-						Error; nil != err {
-						fmt.Println("=========", err)
-						os.Exit(6)
-					}
+	df := NewBatchHook[Test1]()
+	task := InitTaskModel[Test1]{
+		TaskName: "test1",
+		Opt: []Option[Test1]{
+			WithWaitTime[Test1](2 * time.Second),
+			WithLoopTime[Test1](1 * time.Second),
+			WithChanSize[Test1](1000),
+			WithDoingSize[Test1](3000),
+			WithHandleGoNum[Test1](3),
+			WithHookFunc[Test1](func(item []Test1) bool {
+				//fmt.Println("======len(item)=======", len(item))
+				//fmt.Println("=============", i)
+				var arpHosts []Test1
+				for _, vl := range item {
+					fmt.Println(vl)
+				}
+				//fmt.Println("len(arpHosts)",len(arpHosts))
+				//fmt.Println(len(arpHosts)/3000)
+				//os.Exit(2)
+				//for i := 0;i < len(arpHosts)/3000;i++{
+				//	var info = arpHosts[i*3000:i*3000+3000]
+				if err = DB.
+					Model(&Test1{}).
+					//Debug().
+					Create(&arpHosts).
+					Error; nil != err {
+					fmt.Println("=========", err)
+					os.Exit(6)
+				}
 
-					//}
+				//}
 
-					return true
-				}),
-				WithEndHook(func(b bool, i ...interface{}) {
-					//fmt.Println("--------------")
-					//fmt.Println(b)
-					//fmt.Println(len(i))
-					//fmt.Println(i)
-				}),
-				WithSavePanic(func(i interface{}) {
-					if err := recover(); err != nil {
-						fmt.Println(err)
-						fmt.Println(string(debug.Stack()))
-						os.Exit(8)
-					}
-				}),
-			},
+				return true
+			}),
+			WithEndHook[Test1](func(b bool, i ...Test1) {
+				//fmt.Println("--------------")
+				//fmt.Println(b)
+				//fmt.Println(len(i))
+				//fmt.Println(i)
+			}),
+			WithSavePanic[Test1](func(i ...Test1) {
+				if err := recover(); err != nil {
+					fmt.Println(err)
+					fmt.Println(string(debug.Stack()))
+					os.Exit(8)
+				}
+			}),
 		},
 	}
 
-	if err = df.InitTask(task...); nil != err {
+	if err = df.InitTask(task); nil != err {
 		fmt.Println(err)
 		os.Exit(3)
 	}
 
-	if err := df.Run([]string{"test1"}...); nil != err {
+	if err := df.Run("test1"); nil != err {
 		fmt.Println(err)
 		os.Exit(4)
 	}
 
-	item := SubmitModel{
+	item := SubmitModel[Test1]{
 		TaskName: "test1",
 	}
 
@@ -175,7 +169,7 @@ func BenchmarkNewBatchHook(b *testing.B) {
 		os.Exit(4)
 	}
 
-	if err = df.Release([]string{"test1"}...); nil != err {
+	if err = df.Release("test1"); nil != err {
 		fmt.Println(err)
 		os.Exit(5)
 	}
