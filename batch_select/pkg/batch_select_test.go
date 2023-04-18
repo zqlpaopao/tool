@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"encoding/json"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -9,6 +8,7 @@ import (
 	"testing"
 	"time"
 )
+
 /*
 $ go test -bench=.  --benchmem
 goos: darwin
@@ -18,12 +18,12 @@ BenchmarkNewBatchSelect-10      1000000000               0.5782 ns/op          0
 PASS
 ok      github.com/xx/tool/batch_select/pkg      17.588s
 
- */
+*/
 
 func BenchmarkNewBatchSelect(t *testing.B) {
 	type Info struct {
-		Id  int64     `json:"id"`
-		CreateTime  time.Time `json:"create_time"`
+		Id         int64     `json:"id"`
+		CreateTime time.Time `json:"create_time"`
 	}
 
 	var (
@@ -36,51 +36,31 @@ func BenchmarkNewBatchSelect(t *testing.B) {
 		panic(err)
 	}
 
-	b := NewBatchSelect()
+	b := NewBatchSelect[Info]()
 
-	infos := []Info{}
-	if err = b.InitTask([]InitTaskModel{
-		{
-			TaskName: "sss",
-			Opt: []Option{
-				WithHandleGoNum(100),            //处理的协程数量
-				//WithDebug(true),                 //是否开启debug
-				WithLimit(10000),                //limit 的个数 默认10000
-				WithOrderColumn("dev_ip_int32"), //要进行取舍的列
-				WithTable("device"),
-				WithSqlWhere("dev_ip_int32 > 0"),       //where 条件
-				WithResChanSize(10000),                 //接受数据的chan大小
-				WithMysqlSqlCli(db),                    //接受数据的chan大小
-				WithSelectFiled("dev_ip_int32,dev_ip"), //接受数据的chan大小
-				WithCallFunc(func(res *[]map[string]interface{}) {
-					//fmt.Println("res",len(*res))
-					//fmt.Println("res",*res)
-					var (
-						bs   []byte
-						info []Info
-					)
-					if bs, err = json.Marshal(res); nil != err {
-						panic(err)
-					}
+	if err = b.InitTask(InitTaskModel[Info]{
+		TaskName: "sss",
+		Opt: []OptionInter[Info]{
+			WithHandleGoNum[Info](100), //处理的协程数量
+			//WithDebug(true),                 //是否开启debug
+			WithLimit[Info](10000),                //limit 的个数 默认10000
+			WithOrderColumn[Info]("dev_ip_int32"), //要进行取舍的列
+			WithTable[Info]("device"),
+			WithSqlWhere[Info]("dev_ip_int32 > 0", nil),  //where 条件
+			WithResChanSize[Info](10000),                 //接受数据的chan大小
+			WithMysqlSqlCli[Info](db),                    //接受数据的chan大小
+			WithSelectFiled[Info]("dev_ip_int32,dev_ip"), //接受数据的chan大小
+			WithCallFunc[Info](func(res *[]Info) {
+				println(res)
 
-					if err = json.Unmarshal(bs, &info); nil != err {
-						panic(err)
-					}
-					//fmt.Println("len(infos1)", len(info))
+			}), //接受数据
 
-					//fmt.Println(info)
-					infos = append(infos, info...)
-					//fmt.Println("len(infos)", len(infos))
-
-				}), //接受数据
-
-			},
 		},
-	}...); nil != err {
+	}); nil != err {
 		panic(err)
 	}
 
-	if err = b.Run([]string{"xxx"}...); nil != err {
+	if err = b.Run("xxx"); nil != err {
 		panic(err)
 	}
 
