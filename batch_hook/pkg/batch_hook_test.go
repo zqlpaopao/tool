@@ -135,14 +135,7 @@ func BenchmarkNewBatchHook(b *testing.B) {
 		os.Exit(3)
 	}
 
-	if err := df.Run("test1"); nil != err {
-		fmt.Println(err)
-		os.Exit(4)
-	}
-
-	item := SubmitModel[Test1]{
-		TaskName: "test1",
-	}
+	df.Run()
 
 	for i := 0; i < 10000; i++ {
 		items := Test1{
@@ -161,19 +154,11 @@ func BenchmarkNewBatchHook(b *testing.B) {
 			Test9:       0,
 			CreatedTime: time.Now(),
 		}
-		item.Data = append(item.Data, items)
+		df.Submit(&items)
 	}
 
-	if err = df.Submit(item); nil != err {
-		fmt.Println(err)
-		os.Exit(4)
-	}
-
-	if err = df.Release("test1"); nil != err {
-		fmt.Println(err)
-		os.Exit(5)
-	}
-	df.WaitAll()
+	df.Release()
+	df.Wait()
 
 	to := time.Now().Sub(t)
 	fmt.Println("BenchmarkNewBatchHook-end", to)
