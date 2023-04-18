@@ -12,7 +12,7 @@ type HookFunc[T any] func(task []T) bool
 type EndFunc[T any] func(b bool, i ...T)
 
 // SavePanic Functions that handle exception panic
-type SavePanic[T any] func(i ...T)
+type SavePanic func()
 
 type Option[T any] interface {
 	apply(*OptionItem[T])
@@ -28,7 +28,7 @@ type OptionItem[T any] struct {
 	itemCh        chan T
 	hookFunc      HookFunc[T]
 	endHook       EndFunc[T]
-	savePanicFunc SavePanic[T]
+	savePanicFunc SavePanic
 	wg            sync.WaitGroup
 }
 
@@ -55,7 +55,7 @@ func clone[T any]() *OptionItem[T] {
 		itemCh:        nil,
 		hookFunc:      nil,
 		endHook:       nil,
-		savePanicFunc: defaultSavePanic[T],
+		savePanicFunc: defaultSavePanic,
 		wg:            sync.WaitGroup{},
 	}
 
@@ -125,7 +125,7 @@ func WithEndHook[T any](endHook EndFunc[T]) OpFunc[T] {
 }
 
 // WithSavePanic save panic
-func WithSavePanic[T any](savePanicFunc SavePanic[T]) OpFunc[T] {
+func WithSavePanic[T any](savePanicFunc SavePanic) OpFunc[T] {
 	return func(o *OptionItem[T]) {
 		o.savePanicFunc = savePanicFunc
 	}
