@@ -27,34 +27,33 @@ var (
 	ErrTaskClosed      = errors.New("this task has been closed")
 )
 
-//InitTaskModel Initialize task model
-type InitTaskModel struct {
+// InitTaskModel Initialize task any
+type InitTaskModel[T any] struct {
 	TaskName string
-	Opt      []Option
+	Opt      []Option[T]
 }
 
-//check Parameter detection
-func (s *InitTaskModel) check() error {
+// check Parameter detection
+func (s *InitTaskModel[T]) check() error {
 	if s.TaskName == "" {
 		return ERRTaskNameIsEmpty
 	}
 	return nil
 }
 
-//SubmitModel Submit task model
-type SubmitModel struct {
+// SubmitModel Submit task any
+type SubmitModel[T any] struct {
 	TaskName string
-	Data   []interface{}
+	Data     []T
 }
 
-//SubmitItem Submit task parameters
+// SubmitItem Submit task parameters
 type SubmitItem struct {
-
 	Params []interface{}
 }
 
-//check Parameter detection
-func (s *SubmitModel) check() error {
+// check Parameter detection
+func (s *SubmitModel[T]) check() error {
 	if s.TaskName == "" {
 		return ERRTaskNameIsEmpty
 	}
