@@ -2,58 +2,35 @@ package pkg
 
 import (
 	"errors"
-	"time"
 )
 
 const (
-	DoingSize   = 1000
+	Limit       = 10000
 	HandleGoNum = 10
-	ChanSize    = 1000
-	WaitTime    = 2 * time.Second
-	LoopTime    = 1 * time.Second
-)
-
-const (
-	// OPENED represents that the pool is opened.
-	OPENED = iota
-	// CLOSED represents that the pool is closed.
-	CLOSED
+	ChanSize    = 10000
 )
 
 var (
-	ERRTaskNameIsEmpty = errors.New("task name is empty")
-	ERRHookFuncIsEmpty = errors.New("hookFunc is empty")
-	ErrNotHave         = errors.New("not have the task name")
-	ErrTaskClosed      = errors.New("this task has been closed")
+	ERRTaskNameIsEmpty          = errors.New("task name is empty")
+	ERRMySqlCli                 = errors.New("mysql cli is empty")
+	ERROrderColumn              = errors.New("order column is empty")
+	ErrNotHave                  = errors.New("not have the task name")
+	ErrSelectNotHaveOrderColumn = errors.New("the query column has no columns to sort")
 )
 
-// InitTaskModel Initialize task any
+// InitTaskModel Initialize task model
 type InitTaskModel[T any] struct {
 	TaskName string
-	Opt      []Option[T]
+	Opt      []OptionInter[T]
+}
+
+type MinMaxInfo struct {
+	MinId string
+	MaxId string
 }
 
 // check Parameter detection
 func (s *InitTaskModel[T]) check() error {
-	if s.TaskName == "" {
-		return ERRTaskNameIsEmpty
-	}
-	return nil
-}
-
-// SubmitModel Submit task any
-type SubmitModel[T any] struct {
-	TaskName string
-	Data     []T
-}
-
-// SubmitItem Submit task parameters
-type SubmitItem struct {
-	Params []interface{}
-}
-
-// check Parameter detection
-func (s *SubmitModel[T]) check() error {
 	if s.TaskName == "" {
 		return ERRTaskNameIsEmpty
 	}
