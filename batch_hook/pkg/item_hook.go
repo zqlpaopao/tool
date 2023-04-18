@@ -36,7 +36,7 @@ func (o *OptionItem[T]) doing() {
 		//timer1 = time.NewTimer(o.loopTime)
 	)
 	if o.savePanicFunc != nil {
-		defer o.savePanicFunc(task...)
+		defer o.savePanicFunc()
 	}
 	for {
 		select {
@@ -88,9 +88,8 @@ func (o *OptionItem[T]) hook(task *[]T) {
 }
 
 // defaultSavePanic
-func defaultSavePanic[T any](i ...T) {
+func defaultSavePanic() {
 	if err := recover(); nil != err {
-		fmt.Println(i)
 		fmt.Println(err)
 		fmt.Println(string(debug.Stack()))
 	}
