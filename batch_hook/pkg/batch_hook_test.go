@@ -120,7 +120,7 @@ func BenchmarkNewBatchHook(b *testing.B) {
 				//fmt.Println(len(i))
 				//fmt.Println(i)
 			}),
-			WithSavePanic[Test1](func(i ...Test1) {
+			WithSavePanic[Test1](func() {
 				if err := recover(); err != nil {
 					fmt.Println(err)
 					fmt.Println(string(debug.Stack()))
