@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-//check verification mysql client and order column
-func (o *option) check() error {
+// check verification mysql client and order column
+func (o *Option[T]) check() error {
 	if o.mysqlCli == nil {
 		return ERRMySqlCli
 	}
@@ -20,15 +20,15 @@ func (o *option) check() error {
 	return nil
 }
 
-//Run tidy other info
-func (o *option) Run() {
+// Run tidy other info
+func (o *Option[T]) Run() {
 	o.getBaseData()
 	go o.producer()
 	o.consumer()
 }
 
-//getBaseData get base data ,will run all
-func (o *option) getBaseData() {
+// getBaseData get base data ,will run all
+func (o *Option[T]) getBaseData() {
 	var (
 		maxBaseInfo MaxMinInfo
 		err         error
@@ -47,8 +47,8 @@ func (o *option) getBaseData() {
 	return
 }
 
-//OrderIdDebug If it is obtained according to the self increasing ID, create an acquisition interval
-func (o *option) OrderIdDebug(maxBaseInfo *MaxMinInfo) (err error) {
+// OrderIdDebug If it is obtained according to the self increasing ID, create an acquisition interval
+func (o *Option[T]) OrderIdDebug(maxBaseInfo *MaxMinInfo) (err error) {
 	var minId, maxId, loop int
 	if minId, err = strconv.Atoi(maxBaseInfo.Min); nil != err {
 		return
@@ -61,8 +61,8 @@ func (o *option) OrderIdDebug(maxBaseInfo *MaxMinInfo) (err error) {
 	return
 }
 
-//sendMinWhere Send to producer
-func (o *option) sendMinWhere(minId, loop int) {
+// sendMinWhere Send to producer
+func (o *Option[T]) sendMinWhere(minId, loop int) {
 	for i := 1; i <= loop; i++ {
 		info := &MinMaxInfo{
 			MinId: strconv.Itoa(minId),
@@ -74,8 +74,8 @@ func (o *option) sendMinWhere(minId, loop int) {
 	close(o.minWhereCh)
 }
 
-//doing Handle by yourself every goroutine process
-func (o *option) producer() {
+// doing Handle by yourself every goroutine process
+func (o *Option[T]) producer() {
 	o.wg.Add(o.handleGoNum)
 	for i := 0; i < o.handleGoNum; i++ {
 		go o.producerLoopWorker()
@@ -84,8 +84,8 @@ func (o *option) producer() {
 	close(o.resCh)
 }
 
-//producerLoopWorker Producers obtain production interval data
-func (o *option) producerLoopWorker() {
+// producerLoopWorker Producers obtain production interval data
+func (o *Option[T]) producerLoopWorker() {
 	defer o.savePanicFunc("producerLoopWorker-" + o.table)
 LABEL:
 	for {
@@ -105,8 +105,8 @@ LABEL:
 	o.wg.Done()
 }
 
-//getRes get every item result
-func (o *option) producerDbData(v *MinMaxInfo) {
+// getRes get every item result
+func (o *Option[T]) producerDbData(v *MinMaxInfo) {
 	var (
 		sqlStr = ""
 		err    error
@@ -126,8 +126,8 @@ func (o *option) producerDbData(v *MinMaxInfo) {
 	o.resCh <- &res
 }
 
-//retryFind put back the min id
-func (o *option) retryFind(id *MinMaxInfo, err error) {
+// retryFind put back the min id
+func (o *Option[T]) retryFind(id *MinMaxInfo, err error) {
 	if id != nil {
 		o.minWhereCh <- id
 	}
@@ -136,8 +136,8 @@ func (o *option) retryFind(id *MinMaxInfo, err error) {
 	}
 }
 
-//consumer
-func (o *option) consumer() {
+// consumer
+func (o *Option[T]) consumer() {
 	o.revWg.Add(o.handleRevGoNum)
 	for i := 0; i < o.handleRevGoNum; i++ {
 		go o.revResCh()
@@ -146,8 +146,8 @@ func (o *option) consumer() {
 	o.wgAll.Done()
 }
 
-//revResCh tidy the result and call back func
-func (o *option) revResCh() {
+// revResCh tidy the result and call back func
+func (o *Option[T]) revResCh() {
 	defer o.savePanicFunc("revResCh-" + o.table)
 LABEL:
 	for {
@@ -158,7 +158,7 @@ LABEL:
 			}
 			if o.callFunc != nil && v != nil && len(*v) > 0 {
 				o.callFunc(v)
-				*v = make([]map[string]interface{}, 0, o.limit+1)
+				*v = make([]T, 0, o.limit+1)
 				o.putResMap(*v)
 			}
 		default:
