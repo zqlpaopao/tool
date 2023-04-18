@@ -5,47 +5,47 @@ import (
 	"time"
 )
 
-//HookFunc Callbacks need to handle specific functions
-type HookFunc func(task []interface{}) bool
+// HookFunc Callbacks need to handle specific functions
+type HookFunc[T any] func(task []T) bool
 
-//EndFunc Functions that handle callbacks each time
-type EndFunc func(b bool, i ...interface{})
+// EndFunc Functions that handle callbacks each time
+type EndFunc[T any] func(b bool, i ...T)
 
-//SavePanic Functions that handle exception panic
-type SavePanic func(i interface{})
+// SavePanic Functions that handle exception panic
+type SavePanic[T any] func(i ...T)
 
-type Option interface {
-	apply(*option)
+type Option[T any] interface {
+	apply(*OptionItem[T])
 }
 
-type option struct {
+type OptionItem[T any] struct {
 	close         int32
 	doingSize     int
 	handleGoNum   int
 	chanSize      int
 	waitTime      time.Duration
 	loopTime      time.Duration
-	itemCh        chan interface{}
-	hookFunc      HookFunc
-	endHook       EndFunc
-	savePanicFunc SavePanic
+	itemCh        chan T
+	hookFunc      HookFunc[T]
+	endHook       EndFunc[T]
+	savePanicFunc SavePanic[T]
 	wg            sync.WaitGroup
 }
 
-type OpFunc func(*option)
+type OpFunc[T any] func(*OptionItem[T])
 
-func NewOption(opt ...Option) *option {
-	return clone().WithOptions(opt...)
+func NewOption[T any](opt ...Option[T]) *OptionItem[T] {
+	return clone[T]().WithOptions(opt...)
 }
 
-//apply assignment function entity
-func (o OpFunc) apply(opt *option) {
+// apply assignment function entity
+func (o OpFunc[T]) apply(opt *OptionItem[T]) {
 	o(opt)
 }
 
-//clone  new object
-func clone() *option {
-	return &option{
+// clone  new object
+func clone[T any]() *OptionItem[T] {
+	return &OptionItem[T]{
 		close:         OPENED,
 		doingSize:     DoingSize,
 		handleGoNum:   HandleGoNum,
@@ -55,14 +55,14 @@ func clone() *option {
 		itemCh:        nil,
 		hookFunc:      nil,
 		endHook:       nil,
-		savePanicFunc: defaultSavePanic,
+		savePanicFunc: defaultSavePanic[T],
 		wg:            sync.WaitGroup{},
 	}
 
 }
 
-//WithOptions Execute assignment function entity
-func (o *option) WithOptions(opt ...Option) *option {
+// WithOptions Execute assignment function entity
+func (o *OptionItem[T]) WithOptions(opt ...Option[T]) *OptionItem[T] {
 	for _, v := range opt {
 		v.apply(o)
 	}
@@ -70,63 +70,63 @@ func (o *option) WithOptions(opt ...Option) *option {
 	return o
 }
 
-//initParams Initialization parameters
-func (o *option) initParams() {
-	o.itemCh = make(chan interface{}, o.chanSize)
+// initParams Initialization parameters
+func (o *OptionItem[T]) initParams() {
+	o.itemCh = make(chan T, o.chanSize)
 }
 
-//WithDoingSize How much to start processing default 100
-func WithDoingSize(size int) OpFunc {
-	return func(o *option) {
+// WithDoingSize How much to start processing default 100
+func WithDoingSize[T any](size int) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.doingSize = size
 	}
 }
 
-//WithHandleGoNum Number of goroutine processed default 100
-func WithHandleGoNum(num int) OpFunc {
-	return func(o *option) {
+// WithHandleGoNum Number of goroutine processed default 100
+func WithHandleGoNum[T any](num int) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.handleGoNum = num
 	}
 }
 
-//WithWaitTime How often to wait default 2s
-func WithWaitTime(waitTime time.Duration) OpFunc {
-	return func(o *option) {
+// WithWaitTime How often to wait default 2s
+func WithWaitTime[T any](waitTime time.Duration) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.waitTime = waitTime
 	}
 }
 
-//WithChanSize chan size default 100
-func WithChanSize(size int) OpFunc {
-	return func(o *option) {
+// WithChanSize chan size default 100
+func WithChanSize[T any](size int) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.chanSize = size
 	}
 }
 
-//WithLoopTime How often is the length checked and whether it is implemented default 1s
-func WithLoopTime(loopTime time.Duration) OpFunc {
-	return func(o *option) {
+// WithLoopTime How often is the length checked and whether it is implemented default 1s
+func WithLoopTime[T any](loopTime time.Duration) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.loopTime = loopTime
 	}
 }
 
-//WithHookFunc callback func
-func WithHookFunc(hookFunc HookFunc) OpFunc {
-	return func(o *option) {
+// WithHookFunc callback func
+func WithHookFunc[T any](hookFunc HookFunc[T]) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.hookFunc = hookFunc
 	}
 }
 
-//WithEndHook callback end func
-func WithEndHook(endHook EndFunc) OpFunc {
-	return func(o *option) {
+// WithEndHook callback end func
+func WithEndHook[T any](endHook EndFunc[T]) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.endHook = endHook
 	}
 }
 
-//WithSavePanic save panic
-func WithSavePanic(savePanicFunc SavePanic) OpFunc {
-	return func(o *option) {
+// WithSavePanic save panic
+func WithSavePanic[T any](savePanicFunc SavePanic[T]) OpFunc[T] {
+	return func(o *OptionItem[T]) {
 		o.savePanicFunc = savePanicFunc
 	}
 }
