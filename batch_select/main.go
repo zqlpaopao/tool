@@ -15,7 +15,7 @@ type D1 struct {
 }
 
 func (m *D1) TableName() string {
-	return "arp_host"
+	return "xxx"
 }
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	)
 
 	if db, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&loc=Local&parseTime=true&allowNativePasswords=true",
-		"root", "meimima123", "127.0.0.1", "3306", "joypaw_base")), &gorm.Config{}); nil != err {
+		"root", "xxx", "127.0.0.1", "3306", "xxx")), &gorm.Config{}); nil != err {
 		panic(err)
 	}
 
