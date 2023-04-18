@@ -60,7 +60,7 @@ func main() {
 				fmt.Println(len(i))
 				fmt.Println(i)
 			}),
-			pkg.WithSavePanic[User](func(i ...User) {
+			pkg.WithSavePanic[User](func() {
 				if err := recover(); err != nil {
 					fmt.Println(err)
 					fmt.Println(string(debug.Stack()))
