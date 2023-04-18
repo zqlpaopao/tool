@@ -31,13 +31,11 @@ func (o *OptionItem[T]) Run() {
 // doing Handle by yourself every goroutine process
 func (o *OptionItem[T]) doing() {
 	var (
-		task  []T
+		task  = make([]T, 0, o.doingSize)
 		timer = time.NewTimer(o.waitTime)
 		//timer1 = time.NewTimer(o.loopTime)
 	)
-	if o.savePanicFunc != nil {
-		defer o.savePanicFunc()
-	}
+	defer o.savePanicFunc()
 	for {
 		select {
 		case v, ok := <-o.itemCh:
@@ -49,15 +47,15 @@ func (o *OptionItem[T]) doing() {
 				task = []T{}
 				goto END
 			}
-			task = append(task, v)
+			task = append(task, *v)
 			if len(task) >= o.doingSize {
 				o.hook(&task)
-				task = []T{}
+				task = make([]T, 0, o.doingSize)
 			}
 		case <-timer.C:
 			if len(task) > 0 {
 				o.hook(&task)
-				task = []T{}
+				task = make([]T, 0, o.doingSize)
 			}
 			timer.Reset(o.waitTime)
 		//case <-timer1.C:
@@ -70,7 +68,7 @@ func (o *OptionItem[T]) doing() {
 			//if atomic.LoadInt32(&o.close) == CLOSED {
 			//	goto END
 			//}
-			time.Sleep(time.Second)
+			time.Sleep(300 * time.Millisecond)
 		}
 	}
 END:
