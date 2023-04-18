@@ -25,7 +25,7 @@ type OptionItem[T any] struct {
 	chanSize      int
 	waitTime      time.Duration
 	loopTime      time.Duration
-	itemCh        chan T
+	itemCh        chan *T
 	hookFunc      HookFunc[T]
 	endHook       EndFunc[T]
 	savePanicFunc SavePanic
@@ -72,7 +72,7 @@ func (o *OptionItem[T]) WithOptions(opt ...Option[T]) *OptionItem[T] {
 
 // initParams Initialization parameters
 func (o *OptionItem[T]) initParams() {
-	o.itemCh = make(chan T, o.chanSize)
+	o.itemCh = make(chan *T, o.chanSize)
 }
 
 // WithDoingSize How much to start processing default 100
