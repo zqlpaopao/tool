@@ -1,43 +1,41 @@
 package pkg
 
-type batchSelect struct {
-	batchSelectInfo map[string]*option
+type BatchSelect[T any] struct {
+	taskName string
+	batchOpt *Option[T]
 }
 
-//NewBatchSelect make new batchSelect
-func NewBatchSelect() *batchSelect {
-	return &batchSelect{batchSelectInfo: make(map[string]*option)}
+// NewBatchSelect make new BatchSelect
+func NewBatchSelect[T any]() *BatchSelect[T] {
+	return &BatchSelect[T]{}
 }
 
-//InitTask Initialize batch processing hook
-func (b *batchSelect) InitTask(task ...InitTaskModel) (err error) {
-	for i := 0; i < len(task); i++ {
-		if err = task[i].check(); nil != err {
-			return
-		}
-		b.batchSelectInfo[task[i].TaskName] = NewOption(task[i].Opt...)
-		if err = b.batchSelectInfo[task[i].TaskName].check(); nil != err {
-			return
-		}
+// InitTask Initialize batch processing hook
+func (b *BatchSelect[T]) InitTask(task InitTaskModel[T]) (err error) {
+	if err = task.check(); nil != err {
+		return
 	}
-	return
+
+	b.taskName,
+		b.batchOpt =
+		task.TaskName,
+		NewOption[T](task.Opt...)
+
+	return b.batchOpt.check()
 }
 
-//Run Start multiple consumption tasks by name
-func (b *batchSelect) Run(taskName ...string) error {
-	for i := 0; i < len(taskName); i++ {
-		if _, ok := b.batchSelectInfo[taskName[i]]; !ok {
-			return ErrNotHave
-		}
-		b.batchSelectInfo[taskName[i]].wgAll.Add(1)
-		go b.batchSelectInfo[taskName[i]].Run()
+// Run Start multiple consumption tasks by name
+func (b *BatchSelect[T]) Run(taskName string) error {
+	if taskName != b.taskName {
+		return ErrNotHave
 	}
+
+	b.batchOpt.wgAll.Add(1)
+	go b.batchOpt.Run()
 	return nil
 }
 
-//Wait  the wait all
-func (b *batchSelect) Wait() {
-	for _, v := range b.batchSelectInfo {
-		v.wgAll.Wait()
-	}
+// Wait  the wait all
+func (b *BatchSelect[T]) Wait() {
+	b.batchOpt.wgAll.Wait()
 }
