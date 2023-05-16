@@ -1,8 +1,27 @@
 package main
 
-import "github.com/zqlpaopao/tool/scan-active-ip/pkg"
+import (
+	"fmt"
+	"github.com/zqlpaopao/tool/scan-active-ip/pkg/fping"
+)
+
+
+//通过 fping 扫描网段存活的ip信息 默认10个goroutine 操作
+func fPing() {
+	f := fping.NewScanActiveWithOption(fping.WithDefaultCallBack(func(bytes []byte) bool {
+		fmt.Println("callback")
+		fmt.Println(string(bytes))
+		return true
+	})).Do()
+	f.Submit("8.8.8.8/24")
+	f.Release()
+	f.Wait()
+	r := f.Error()
+	fmt.Println(r)
+}
 
 func main() {
+	fPing()
 
 	//usageTime := time.Now()
 	//返回端口map
@@ -26,7 +45,7 @@ func main() {
 	//}
 	//fmt.Printf("Usage time: %v\n\n", time.Since(usageTime))
 	//return
-	pkg.GetRouteInfo()
+	//pkg.GetRouteInfo()
 
 	//var c = make(chan []string, 10000)
 	//
