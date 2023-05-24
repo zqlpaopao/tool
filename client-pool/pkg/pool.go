@@ -95,7 +95,6 @@ func (o *Object[T]) check() {
 			if !ok {
 				goto END
 			}
-			fmt.Println("heart------------------------>")
 			o.Heartbeat(v)
 		}
 	}
@@ -137,7 +136,6 @@ func (o *Object[T]) push() {
 		for k1, v1 := range v.cli {
 			if v1.IsDelete(v.option.maxLifeTime) {
 				delete(o.Pool[k].cli, k1)
-				fmt.Println("delete------------------>", k1)
 				continue
 			}
 			o.checkCh <- v1
