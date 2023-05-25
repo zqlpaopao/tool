@@ -134,6 +134,10 @@ func (c *confManager) GetGraphConf() (*viper.Viper, error) {
 	return c.getViper("graph")
 }
 
+func (c *confManager) GetEsConf() (*viper.Viper, error) {
+	return c.getViper("es")
+}
+
 func (c *confManager) GetLogLayout(project string, file string) (logPath string, err error) {
 	viperOb, err := c.GetLogsConf()
 	if err != nil {
