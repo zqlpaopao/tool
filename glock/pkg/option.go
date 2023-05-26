@@ -1,230 +1,163 @@
 package pkg
 
 import (
-	"context"
-	"fmt"
-	redisScript "github.com/zqlpaopao/tool/redis/pkg"
-	"github.com/zqlpaopao/tool/retry/pkg"
-	"runtime/debug"
-	"sync"
+	"github.com/go-redis/redis/v8"
+	randString "github.com/zqlpaopao/tool/rand-string/pkg"
 	"time"
 )
 
-type gLock struct {
-	isMaster bool
-	seizeTag bool
-	opt      *option
-	err      error
-	reTry    *pkg.RetryManager
-	lock     sync.RWMutex
+type RenewalTypeFunc func(executeCount uint) uint
+
+//LockCallbackFun Retry the function that completed execution
+type LockCallbackFun func(...interface{})
+
+type Glock interface {
+	Lock(...interface{}) Glock
+	UnLock() Glock
+	IsMaster() bool
+	Error() error
+	GetMembers() (map[string]string, error)
 }
 
-// NewGlock get lock object
-func NewGlock(f ...Option) Glock {
-	return &gLock{
-		opt:      NewOptions(f...),
-		isMaster: false,
-		reTry:    pkg.NewRetryManager(pkg.WithRetryInterval(time.Millisecond * 500)),
-		lock:     sync.RWMutex{},
+type Option interface {
+	apply(opt *option)
+}
+
+type option struct {
+	seizeClose      chan struct{}
+	renewalTag      chan struct{}
+	seizeTag        bool
+	seizeCycle      time.Duration
+	expire          uint
+	redisTimeout    time.Duration
+	key             string
+	masterKey       string
+	RenewalOften    RenewalTypeFunc
+	redisClient     *redis.Client
+	lockFailFunc    LockCallbackFun
+	lockSuccessFunc LockCallbackFun
+}
+
+//OpFunc type func
+type OpFunc func(*option)
+
+//NewOptions make option
+func NewOptions(f ...Option) *option {
+	return clone().WithOptions(f...)
+}
+
+//apply assignment function entity
+func (o OpFunc) apply(opt *option) {
+	o(opt)
+}
+
+//clone  new object
+func clone() *option {
+	return &option{
+		seizeClose:      make(chan struct{}),
+		renewalTag:      make(chan struct{}),
+		seizeTag:        false,
+		seizeCycle:      DefaultSeizeTIme,
+		expire:          DefaultExpireTIme,
+		redisTimeout:    DefaultRedisTimeOut,
+		key:             randString.RandGenString(randString.RandSourceLetterAndNumber, 8),
+		masterKey:       Lock,
+		RenewalOften:    DefaultRenewalTime,
+		redisClient:     &redis.Client{},
+		lockSuccessFunc: nil,
+		lockFailFunc:    nil,
 	}
 }
 
-// Lock Start locking. If you turn on the short sign, you will always try to lock
-func (g *gLock) Lock(arg ...interface{}) Glock {
-	g.checkRedis()
-	if g.err != nil {
-		return g
+//WithOptions Execute assignment function entity
+func (o *option) WithOptions(f ...Option) *option {
+	for _, v := range f {
+		v.apply(o)
 	}
-	g.setNx(arg...)
-	go g.renewalOften()
-	g.joinMemberGroup()
-	go g.seizeLock(arg...)
-	return g
+	return o
 }
 
-// Trying to get master role
-func (g *gLock) setNx(arg ...interface{}) {
-	var (
-		isMaster bool
-		err      error
-	)
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultRedisTimeOut)
-	defer cancel()
-	if isMaster, err = g.opt.redisClient.SetNX(ctx, g.opt.masterKey, Master, time.Duration(g.opt.expire)*time.Second).Result(); err != nil {
-		return
-	}
-	g.setMaster(isMaster)
-	g.callbackFunc(arg...)
-}
-
-// check redisClient
-func (g *gLock) checkRedis() {
-	_, g.err = g.opt.redisClient.Ping(context.TODO()).Result()
-}
-
-// Join the competition group
-func (g *gLock) joinMemberGroup() {
-	g.reTry.DoSync(func() bool {
-		role := Slave
-		if g.IsMaster() {
-			role = Master
-		}
-		if _, err := g.opt.redisClient.Eval(context.Background(), redisScript.HSetANdExpire, []string{memberGroup}, 1, int(g.opt.expire), g.opt.key, role).Result(); !redisScript.IsRedisNilError(err) {
-			return false
-		}
-		return true
-	})
-}
-
-// callbackFunc Successful and failed callback functions
-func (g *gLock) callbackFunc(arg ...interface{}) {
-	if g.IsMaster() && g.opt.lockSuccessFunc != nil {
-		g.opt.lockSuccessFunc(arg...)
-	}
-	if !g.IsMaster() && g.opt.lockFailFunc != nil {
-		g.opt.lockFailFunc(arg...)
+//WithMasterKey Set master Key .default Lock
+func WithMasterKey(key string) OpFunc {
+	return func(o *option) {
+		o.masterKey = key
 	}
 }
 
-// renewalOften Obtain the lock and cycle the renewal operation
-func (g *gLock) renewalOften() {
-	savePanic()()
-	renewal := g.opt.RenewalOften(g.opt.expire)
-	timer := time.NewTimer(time.Second * time.Duration(renewal-1))
-	script := g.makScript()
-	for {
-		select {
-		case <-timer.C:
-			g.doRenewal(script, renewal)
-			g.joinMemberGroup()
-			timer.Reset(time.Second * time.Duration(renewal-1))
-		case <-g.opt.renewalTag:
-			goto END
-		default:
-			if !g.IsMaster() {
-				goto END
-			}
-			time.Sleep(time.Second)
-		}
+//WithSeizeTag Set Seize tag
+func WithSeizeTag(tag bool) OpFunc {
+	return func(o *option) {
+		o.seizeTag = tag
 	}
-END:
-	timer.Stop()
 }
 
-// makScript Preloaded Lua script
-func (g *gLock) makScript() string {
-	var str string
-	var err error
-	if str, err = g.opt.redisClient.ScriptLoad(context.TODO(), redisScript.SetExpireByTTl).Result(); nil != err {
-		return ""
+//WithSeizeCycle Set Seize cycle
+func WithSeizeCycle(t time.Duration) OpFunc {
+	return func(o *option) {
+		o.seizeCycle = t
 	}
-	return str
 }
 
-// doRenewal Execute the renewal of lua and check the effective time of the master
-func (g *gLock) doRenewal(script string, renewal uint) {
-	if script != "" {
-		g.reTry.DoSync(func() bool {
-			if _, err := g.opt.redisClient.EvalSha(context.Background(), script, []string{g.opt.masterKey}, Master, int(renewal), int(g.opt.term)).Result(); !redisScript.IsRedisNilError(err) {
-				return false
-			}
-			return true
-		})
-		return
+//WithExpireTime Expiration time of key
+func WithExpireTime(time uint) OpFunc {
+	return func(o *option) {
+		o.expire = time
 	}
-	g.reTry.DoSync(func() bool {
-		if _, err := g.opt.redisClient.Eval(context.Background(), redisScript.SetExpireByTTl, []string{g.opt.masterKey}, Master, int(renewal), int(g.opt.term)).Result(); !redisScript.IsRedisNilError(err) {
-			return false
-		}
-		return true
-	})
 }
 
-// seizeLock If you don't get the lock and want to get the lock, keep trying to get the lock
-func (g *gLock) seizeLock(arg ...interface{}) {
-	savePanic()()
-	if !g.opt.seizeTag {
-		return
+//WithLockKey lock key
+func WithLockKey(key string) OpFunc {
+	return func(o *option) {
+		o.key = key
 	}
-	timer := time.NewTimer(g.opt.seizeCycle)
-	for {
-		select {
-		case <-timer.C:
-			timer.Reset(g.opt.seizeCycle)
-			if g.IsMaster() {
-				continue
-			}
-			g.setNx(arg...)
-			if g.IsMaster() {
-				go g.renewalOften()
-			}
-			g.joinMemberGroup()
-		case <-g.opt.seizeClose:
-			goto END
-		default:
-			time.Sleep(time.Second)
-		}
+}
+
+//WithRenewalOften Time to renew type the contract
+func WithRenewalOften(f RenewalTypeFunc) OpFunc {
+	return func(o *option) {
+		o.RenewalOften = f
 	}
-END:
-	timer.Stop()
-
 }
 
-// UnLock free lock
-func (g *gLock) UnLock() Glock {
-	g.opt.seizeClose <- struct{}{}
-	if g.IsMaster() {
-		g.opt.renewalTag <- struct{}{}
+//WithRedisTimeout Time to renew type the contract
+func WithRedisTimeout(t time.Duration) OpFunc {
+	return func(o *option) {
+		o.redisTimeout = t
 	}
-	//close(g.opt.seizeClose)
-	//close(g.opt.renewalTag)
-	g.reTry.DoSync(func() bool {
-		if !g.IsMaster() {
-			return true
-		}
-		if _, err := g.opt.redisClient.Del(context.Background(), g.opt.masterKey).Result(); err != nil {
-			return false
-		}
-		if _, err := g.opt.redisClient.HDel(context.Background(), memberGroup, g.opt.key).Result(); err != nil {
-			return false
-		}
-		g.setMaster(false)
-		return true
-	})
-	return g
 }
 
-// IsMaster Is it a master
-func (g *gLock) IsMaster() (b bool) {
-	g.lock.Lock()
-	b = g.isMaster
-	g.lock.Unlock()
-	return
+//WithRedisClient Time to renew type the contract
+func WithRedisClient(cl *redis.Client) OpFunc {
+	return func(o *option) {
+		o.redisClient = cl
+	}
 }
 
-// set master
-func (g *gLock) setMaster(b bool) {
-	g.lock.Lock()
-	g.isMaster = b
-	g.lock.Unlock()
+//DefaultRenewalTime The default is to renew the contract in half of the current time
+//if is zero of 1
+func DefaultRenewalTime(time uint) uint {
+	t := (time + 2) / 2
+	if t > 0 {
+		return t
+	}
+	return 1
 }
 
-// Error get error
-func (g *gLock) Error() error {
-	return g.err
+//CustomRenewalTime Custom renewal time
+func CustomRenewalTime(time uint) uint {
+	return time
 }
 
-// GetMembers get all members
-func (g *gLock) GetMembers() (mem map[string]string, err error) {
-	return g.opt.redisClient.HGetAll(context.Background(), memberGroup).Result()
+//WithLockFailFunc get lock fail callback func
+func WithLockFailFunc(lockFail LockCallbackFun) OpFunc {
+	return func(o *option) {
+		o.lockFailFunc = lockFail
+	}
 }
 
-// tidy panic
-func savePanic() func() {
-	return func() {
-		if err := recover(); err != nil {
-			fmt.Println(err)
-			fmt.Println(string(debug.Stack()))
-		}
+//WithLockSuccessFunc get lock success callback func
+func WithLockSuccessFunc(lockSuss LockCallbackFun) OpFunc {
+	return func(o *option) {
+		o.lockSuccessFunc = lockSuss
 	}
 }
