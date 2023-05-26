@@ -19,7 +19,7 @@ type gLock struct {
 	lock     sync.RWMutex
 }
 
-// NewGlock get lock object
+//NewGlock get lock object
 func NewGlock(f ...Option) Glock {
 	return &gLock{
 		opt:      NewOptions(f...),
@@ -29,7 +29,7 @@ func NewGlock(f ...Option) Glock {
 	}
 }
 
-// Lock Start locking. If you turn on the short sign, you will always try to lock
+//Lock Start locking. If you turn on the short sign, you will always try to lock
 func (g *gLock) Lock(arg ...interface{}) Glock {
 	g.checkRedis()
 	if g.err != nil {
@@ -42,7 +42,7 @@ func (g *gLock) Lock(arg ...interface{}) Glock {
 	return g
 }
 
-// Trying to get master role
+//Trying to get master role
 func (g *gLock) setNx(arg ...interface{}) {
 	var (
 		isMaster bool
@@ -57,12 +57,12 @@ func (g *gLock) setNx(arg ...interface{}) {
 	g.callbackFunc(arg...)
 }
 
-// check redisClient
+//check redisClient
 func (g *gLock) checkRedis() {
 	_, g.err = g.opt.redisClient.Ping(context.TODO()).Result()
 }
 
-// Join the competition group
+//Join the competition group
 func (g *gLock) joinMemberGroup() {
 	g.reTry.DoSync(func() bool {
 		role := Slave
@@ -76,7 +76,7 @@ func (g *gLock) joinMemberGroup() {
 	})
 }
 
-// callbackFunc Successful and failed callback functions
+//callbackFunc Successful and failed callback functions
 func (g *gLock) callbackFunc(arg ...interface{}) {
 	if g.IsMaster() && g.opt.lockSuccessFunc != nil {
 		g.opt.lockSuccessFunc(arg...)
@@ -86,9 +86,12 @@ func (g *gLock) callbackFunc(arg ...interface{}) {
 	}
 }
 
-// renewalOften Obtain the lock and cycle the renewal operation
+//renewalOften Obtain the lock and cycle the renewal operation
 func (g *gLock) renewalOften() {
 	savePanic()()
+	if !g.IsMaster() {
+		return
+	}
 	renewal := g.opt.RenewalOften(g.opt.expire)
 	timer := time.NewTimer(time.Second * time.Duration(renewal-1))
 	script := g.makScript()
@@ -111,7 +114,7 @@ END:
 	timer.Stop()
 }
 
-// makScript Preloaded Lua script
+//makScript Preloaded Lua script
 func (g *gLock) makScript() string {
 	var str string
 	var err error
@@ -121,7 +124,7 @@ func (g *gLock) makScript() string {
 	return str
 }
 
-// doRenewal Execute the renewal of lua and check the effective time of the master
+//doRenewal Execute the renewal of lua and check the effective time of the master
 func (g *gLock) doRenewal(script string, renewal uint) {
 	if script != "" {
 		g.reTry.DoSync(func() bool {
@@ -140,7 +143,7 @@ func (g *gLock) doRenewal(script string, renewal uint) {
 	})
 }
 
-// seizeLock If you don't get the lock and want to get the lock, keep trying to get the lock
+//seizeLock If you don't get the lock and want to get the lock, keep trying to get the lock
 func (g *gLock) seizeLock(arg ...interface{}) {
 	savePanic()()
 	if !g.opt.seizeTag {
@@ -155,9 +158,7 @@ func (g *gLock) seizeLock(arg ...interface{}) {
 				continue
 			}
 			g.setNx(arg...)
-			if g.IsMaster() {
-				go g.renewalOften()
-			}
+			go g.renewalOften()
 			g.joinMemberGroup()
 		case <-g.opt.seizeClose:
 			goto END
@@ -170,7 +171,7 @@ END:
 
 }
 
-// UnLock free lock
+//UnLock free lock
 func (g *gLock) UnLock() Glock {
 	g.opt.seizeClose <- struct{}{}
 	if g.IsMaster() {
@@ -194,7 +195,7 @@ func (g *gLock) UnLock() Glock {
 	return g
 }
 
-// IsMaster Is it a master
+//IsMaster Is it a master
 func (g *gLock) IsMaster() (b bool) {
 	g.lock.Lock()
 	b = g.isMaster
@@ -202,24 +203,24 @@ func (g *gLock) IsMaster() (b bool) {
 	return
 }
 
-// set master
+//set master
 func (g *gLock) setMaster(b bool) {
 	g.lock.Lock()
 	g.isMaster = b
 	g.lock.Unlock()
 }
 
-// Error get error
+//Error get error
 func (g *gLock) Error() error {
 	return g.err
 }
 
-// GetMembers get all members
+//GetMembers get all members
 func (g *gLock) GetMembers() (mem map[string]string, err error) {
 	return g.opt.redisClient.HGetAll(context.Background(), memberGroup).Result()
 }
 
-// tidy panic
+//tidy panic
 func savePanic() func() {
 	return func() {
 		if err := recover(); err != nil {
