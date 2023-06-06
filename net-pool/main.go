@@ -2,107 +2,107 @@ package main
 
 import (
 	"fmt"
-	pkg2 "github.com/zqlpaopao/tool/net-pool/pkg"
+	"github.com/zqlpaopao/tool/net-pool/pkg"
 	"net"
+	"os"
 	"time"
 )
 
+// https://github.com/silenceper/pool/tree/master
+// https://github.com/fatih/pool
 /*
 	//支持grpc的连接池和http的连接池
- */
+*/
 
-func main(){
-	cp ,err := pkg2.NewItemPool(
-		//pkg2.WithAddr("127.0.0.1"),
-		//pkg2.WithPort("8080"),
-		pkg2.WithMakeConn(func() (pkg2.ConnRes, error) {
-			return net.Dial("tcp",":8080")
-		}),
-		pkg2.WithMaxNum(4),
-		pkg2.WithTimeout(10*time.Second),
-	)
+const addr string = "127.0.0.1:8080"
 
-	fmt.Println(err)
+func main() {
 
-	for {
-			c1 := cp.Get()
+	go server()
+	//等待tcp server启动
+	time.Sleep(2 * time.Second)
+	client()
+	select {}
+}
 
+func client() {
 
-		c1.GetHttpConn().RemoteAddr()
+	p, err := pkg.NewPoolWithConfig[net.Conn](5, &pkg.Config[net.Conn]{
+		InitialCap: 3,
+		MaxCap:     5,
+		MaxIdle:    1,
+		Factory: func() (net.Conn, error) {
+			return net.Dial("tcp", addr)
+		},
+		Close: func(conn net.Conn) {
+			_ = conn.Close()
+		},
+		Ping: func(conn net.Conn) error {
+			return nil
+		},
+		IdleTimeout: 15 * time.Second,
+	})
+	if err != nil {
+		fmt.Println("err=", err)
+	}
+	p.InitConn()
 
-			fmt.Printf("addr %p\n",c1)
-			fmt.Println("NumPooled",cp.NumPooled())
-			n1,err := c1.GetHttpConn().Write([]byte("hello word"))
-			fmt.Println(n1,"n1")
+	for i := 0; i < 10; i++ {
+		go func() {
+			for {
+				//从连接池中取得一个连接
+				v, err := p.Get()
+				if err != nil {
+					fmt.Println("p.Get", err)
+				}
+				fmt.Println("get-------------------")
+				n, errs := v.Conn.Write([]byte("hello world"))
+				if errs != nil {
+					fmt.Println("v.Conn.Write", errs)
+				}
+				fmt.Println("write----n", n)
+				//将连接放回连接池中
+				p.Put(v)
+				fmt.Println("put-------------------")
 
-			fmt.Println("写数据",err)
-			buf := make([]byte, 1024)
-			fmt.Println(2)
-			n, err := c1.GetHttpConn().Read(buf)
-			fmt.Println(3)
-			fmt.Println("读数据",err)
-			fmt.Println("conn1 read : ", string(buf[:n]))
-			fmt.Println("end")
-			cp.Put(c1)
-
-		fmt.Println("NumPooled",cp.NumPooled())
-		time.Sleep(5*time.Second)
+				//查看当前连接中的数量
+				current := p.Len()
+				fmt.Println("len=", current)
+				//time.Sleep(1 * time.Second)
+			}
+		}()
 
 	}
 
 }
-//https://www.jianshu.com/p/43bb39d1d221
-//服务端
-//package main
-//
-//import (
-//"fmt"
-//"net"
-//"time"
-//
-////"io"
-//"log"
-//)
-//
-//func handler(conn net.Conn) {
-//	recieveBuffer := []byte("return")
-//	for {
-//		println("Handling connection! ", conn.RemoteAddr().String(), " connected!")
-//
-//		// how does it know the end of a message vs the start of a new one?
-//		messageSize, err := conn.Write(recieveBuffer)
-//		if err != nil {
-//			return
-//		}
-//
-//		if messageSize > 0 { // update keep alive since we got a message
-//			conn.SetReadDeadline(time.Now().Add(time.Second * 5))
-//		}
-//	}
-//
-//	//fmt.Printf("%#v",conn.RemoteAddr())
-//	//buf := make([]byte, 1024);
-//	//n, _ := conn.(net.Conn).Read(buf);
-//	//fmt.Println(buf)
-//	////n,err := io.Copy(conn, conn);
-//	//fmt.Println(n)
-//	////fmt.Println(err)
-//}
-//
-//func main() {
-//	lis, err := net.Listen("tcp", ":8080");
-//	if err != nil {
-//		log.Fatal(err);
-//	}
-//
-//	for {
-//		fmt.Println(11)
-//		conn, err := lis.Accept();
-//		if err != nil {
-//			fmt.Println(err)
-//			continue;
-//		}
-//		go handler(conn);
-//	}
-//}
 
+func server() {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		fmt.Println("Error listening: ", err)
+		os.Exit(1)
+	}
+	defer l.Close()
+	fmt.Println("Listening on ", addr)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting: ", err)
+		}
+		fmt.Printf("Received message %s -> %s \n", conn.RemoteAddr(), conn.LocalAddr())
+		go handleRequest(conn)
+		fmt.Println("server----for")
+	}
+}
+
+func handleRequest(conn net.Conn) {
+	for {
+		var b = make([]byte, 100)
+		_, err := conn.Read(b)
+		if err != nil {
+			fmt.Println("handleRequest", conn.RemoteAddr(), err)
+		}
+		fmt.Println("handleRequest", string(b), conn.RemoteAddr())
+	}
+
+}
