@@ -27,7 +27,7 @@ func main() {
 
 func client() {
 
-	p, err := pkg.NewPoolWithConfig[net.Conn](5, &pkg.Config[net.Conn]{
+	p := pkg.NewPoolWithConfig[net.Conn](&pkg.Config[net.Conn]{
 		InitialCap: 3,
 		MaxCap:     5,
 		MaxIdle:    1,
@@ -41,12 +41,12 @@ func client() {
 			return nil
 		},
 		IdleTimeout: 15 * time.Second,
-	})
-	if err != nil {
-		fmt.Println("err=", err)
-	}
-	p.InitConn()
+	}).InitConn()
 
+	err := p.Error()
+	if err != nil {
+		fmt.Println(err)
+	}
 	for i := 0; i < 10; i++ {
 		go func() {
 			for {
