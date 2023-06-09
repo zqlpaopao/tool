@@ -28,9 +28,11 @@ func main() {
 func client() {
 
 	p := pkg.NewPoolWithConfig[net.Conn](&pkg.Config[net.Conn]{
-		InitialCap: 3,
-		MaxCap:     5,
-		MaxIdle:    1,
+		InitialCap:    3,
+		MaxCap:        5,
+		MaxIdle:       1,
+		IsCheck:       true,
+		CheckInterval: 2 * time.Second,
 		Factory: func() (net.Conn, error) {
 			return net.Dial("tcp", addr)
 		},
@@ -55,24 +57,27 @@ func client() {
 				if err != nil {
 					fmt.Println("p.Get", err)
 				}
-				fmt.Println("get-------------------")
-				n, errs := v.Conn.Write([]byte("hello world"))
+				//fmt.Println("get-------------------")
+				_, errs := v.Conn.Write([]byte("hello world"))
 				if errs != nil {
-					fmt.Println("v.Conn.Write", errs)
+					//fmt.Println("v.Conn.Write", errs)
 				}
-				fmt.Println("write----n", n)
+				//fmt.Println("write----n", n)
 				//将连接放回连接池中
 				p.Put(v)
-				fmt.Println("put-------------------")
+				//fmt.Println("put-------------------")
 
 				//查看当前连接中的数量
-				current := p.Len()
-				fmt.Println("len=", current)
+				//current := p.Len()
+				//fmt.Println("len=", current)
 				//time.Sleep(1 * time.Second)
 			}
 		}()
 
 	}
+
+	time.Sleep(10 * time.Second)
+	p.Release()
 
 }
 
@@ -100,9 +105,9 @@ func handleRequest(conn net.Conn) {
 		var b = make([]byte, 100)
 		_, err := conn.Read(b)
 		if err != nil {
-			fmt.Println("handleRequest", conn.RemoteAddr(), err)
+			//fmt.Println("handleRequest", conn.RemoteAddr(), err)
 		}
-		fmt.Println("handleRequest", string(b), conn.RemoteAddr())
+		//fmt.Println("handleRequest", string(b), conn.RemoteAddr())
 	}
 
 }
