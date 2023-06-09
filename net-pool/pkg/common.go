@@ -6,9 +6,12 @@ import (
 )
 
 const (
-	DefaultPoolSize     = 3
-	DefaultInitPoolSize = 3
-	DefaultIdleTimeout  = 10 * time.Second
+	DefaultIsRunning     = 1
+	DefaultIsClose       = 2
+	DefaultPoolSize      = 3
+	DefaultInitPoolSize  = 3
+	DefaultIdleTimeout   = 10 * time.Second
+	DefaultCheckInterval = 3 * time.Second
 )
 
 var (
