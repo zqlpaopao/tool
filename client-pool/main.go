@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/zqlpaopao/tool/ssh-cli-pool/pkg"
+	"github.com/zqlpaopao/tool/client-pool/pkg"
 	"golang.org/x/crypto/ssh"
 	"net"
 	"os"
 	"time"
 )
-
 
 func main() {
 	object := "kfj"
