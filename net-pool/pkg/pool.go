@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	"sync/atomic"
 	"time"
 )
@@ -11,6 +12,7 @@ type Pool[T any] struct {
 	Conn        chan *IdleConn[T]
 	opt         *Config[T]
 	openingConn int64
+	close       int32
 }
 
 // IdleConn True connection
@@ -29,7 +31,54 @@ func (p *Pool[T]) InitConn() *Pool[T] {
 		p.Conn <- &IdleConn[T]{Conn: conn, T: time.Now()}
 		atomic.AddInt64(&p.openingConn, 1)
 	}
+	go p.LoopCheck()
 	return p
+}
+
+// LoopCheck  every check time to check client
+func (p *Pool[T]) LoopCheck() {
+	if !p.opt.IsCheck {
+		return
+	}
+
+	var t = time.NewTimer(p.opt.CheckInterval)
+	t1 := time.Now()
+
+LOOP:
+	for {
+		if atomic.LoadInt32(&p.close) == DefaultIsClose {
+			break LOOP
+		}
+		<-t.C
+		fmt.Println(time.Now().Sub(t1))
+		p.tidyPool()
+		t.Reset(p.opt.CheckInterval)
+	}
+	_ = t.Stop()
+}
+
+// tidyPool check client lifetime
+func (p *Pool[T]) tidyPool() {
+	var (
+		client *IdleConn[T]
+		err    error
+	)
+	if client, err = p.Get(); nil != err {
+		goto END
+	}
+	if client.T.Before(time.Now()) {
+		p.Close(client.Conn)
+	}
+	if err = p.Ping(client.Conn); nil != err {
+		p.Close(client.Conn)
+		goto END
+	}
+	p.Put(client)
+	return
+END:
+	if p.opt.Debug && err != nil {
+		fmt.Println("tidyPool--->", err)
+	}
 }
 
 // Get  a connection from the Connection pool
@@ -102,6 +151,7 @@ func (p *Pool[T]) Ping(conn T) error {
 // Release  all connections in the Connection pool
 func (p *Pool[T]) Release() {
 	close(p.Conn)
+	atomic.SwapInt32(&p.close, DefaultIsClose)
 	for conn := range p.Conn {
 		p.Close(conn.Conn)
 	}
