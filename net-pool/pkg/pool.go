@@ -40,17 +40,13 @@ func (p *Pool[T]) LoopCheck() {
 	if !p.opt.IsCheck {
 		return
 	}
-
 	var t = time.NewTimer(p.opt.CheckInterval)
-	t1 := time.Now()
-
 LOOP:
 	for {
 		if atomic.LoadInt32(&p.close) == DefaultIsClose {
 			break LOOP
 		}
 		<-t.C
-		fmt.Println(time.Now().Sub(t1))
 		p.tidyPool()
 		t.Reset(p.opt.CheckInterval)
 	}
