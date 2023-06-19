@@ -156,3 +156,6 @@ func main(){
 ```
 "github.com/zqlpaopao/tool/redis/pkg"
 ```
+
+# 多节点、多集群kafka写入思路
+[github]（https://github.com/smallnest/gofer/tree/master）
