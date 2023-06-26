@@ -76,13 +76,13 @@ func logN(n, b float64) float64 {
 	return math.Log(n) / math.Log(b)
 }
 
-func humanizeBytes(s uint64, long int, base float64, sizes []string) string {
-	if s < 10 {
+func humanizeBytes(s uint64, long int, base int, sizes []string) string {
+	if s < uint64(base) {
 		return fmt.Sprintf("%d B", s)
 	}
-	e := math.Floor(logN(float64(s), base))
+	e := math.Floor(logN(float64(s), float64(base)))
 	suffix := sizes[int(e)]
-	val := math.Floor(float64(s)/math.Pow(base, e)*10+0.5) / 10
+	val := math.Floor(float64(s)/math.Pow(float64(base), e)*10+0.5) / 10
 	f := "%.2f %s"
 	if long < 8 {
 		f = FPix[long]
@@ -91,13 +91,13 @@ func humanizeBytes(s uint64, long int, base float64, sizes []string) string {
 	return fmt.Sprintf(f, val, suffix)
 }
 
-func makeFloatBytes(s uint64, long int, base float64, sizes []string) string {
-	if s < 10 {
+func makeFloatBytes(s uint64, long int, base int, sizes []string) string {
+	if s < uint64(base) {
 		return fmt.Sprintf("%d B", s)
 	}
-	e := math.Floor(logN(float64(s), base))
+	e := math.Floor(logN(float64(s), float64(base)))
 	suffix := sizes[int(e)]
-	val := float64(s) / math.Pow(base, e)
+	val := float64(s) / math.Pow(float64(base), e)
 	f := "%.2f %s"
 	if long < 8 {
 		f = FPix[long]
