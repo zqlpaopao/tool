@@ -12,7 +12,7 @@ var timeSizes = []string{"ns", "us", "ms", "s"}
 // humanizeTimes
 //
 // 82 854 982 -> 82.855 ms
-func humanizeTimes(s uint64, long int, base uint, sizes []string) string {
+func humanizeTimes(s uint64, long int, base uint) string {
 	if s < uint64(base) {
 		return fmt.Sprintf("%d ns", s)
 	}
@@ -39,5 +39,5 @@ func humanizeTimes(s uint64, long int, base uint, sizes []string) string {
 // Duration(82854982) -> 82.855 ms
 // Duration(82814982) -> 82.81 ms
 func Times(s uint64, long int) string {
-	return humanizeTimes(s, long, 1000, timeSizes)
+	return humanizeTimes(s, long, 1000)
 }
