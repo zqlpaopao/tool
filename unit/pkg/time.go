@@ -14,7 +14,7 @@ var timeSizes = []string{"ns", "us", "ms", "s"}
 // 82 854 982 -> 82.855 ms
 func humanizeTimes(s uint64, long int, base uint, sizes []string) string {
 	if s < uint64(base) {
-		return fmt.Sprintf("%d B", s)
+		return fmt.Sprintf("%d ns", s)
 	}
 
 	num, _ := new(big.Float).SetPrec(base).SetString(strconv.FormatUint(s, 10))
