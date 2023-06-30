@@ -77,7 +77,7 @@ func Round(s float64, long int) (str string) {
 	}
 	for i := 1; i < len(vl[1]); i++ {
 		if i == long {
-			if vl[1][i] == byte('5') {
+			if vl[1][i] >=  byte('5') {
 				str += string(vl[1][i-1] + 1)
 				return
 			}
