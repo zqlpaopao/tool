@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 	"strconv"
-	"strings"
 )
 
 var timeSizes = []string{"ns", "us", "ms", "s"}
@@ -45,12 +44,14 @@ func halfAdjustTimes(s uint64, long int, base uint) string {
 		return fmt.Sprintf("%d ns", s)
 	}
 	e := math.Floor(logN(float64(s), float64(base)))
-
 	suffix := timeSizes[int(e)]
+	val := math.Floor(float64(s)/math.Pow(float64(base), e)*10+0.5) / 10
+	f := "%.0f %s"
+	if long < 4 {
+		f = FPix[long]
+	}
 
-	f1 := float64(s) / math.Pow(float64(base), e)
-	fmt.Println(f1)
-	return fmt.Sprintf("%s %s", Round(f1, long), suffix)
+	return fmt.Sprintf(f, val, suffix)
 }
 
 // Times produces a humanizeBytes readable representation of an SI size.
@@ -63,30 +64,4 @@ func Times(s uint64, long int) string {
 
 func TimesHalfAdjust(s uint64, long int) string {
 	return halfAdjustTimes(s, long, 1000)
-}
-
-func Round(s float64, long int) (str string) {
-	st := strconv.FormatFloat(s, 'f', 5, 64)
-	vl := strings.Split(st, ".")
-	if len(vl) < 2 {
-		return st
-	}
-	str = vl[0] + "."
-	if len(vl[1]) < long+1 {
-		return st
-	}
-	for i := 1; i < len(vl[1]); i++ {
-		if i == long {
-			if vl[1][i] >=  byte('5') {
-				str += string(vl[1][i-1] + 1)
-				return
-			}
-			str += string(vl[1][i-1])
-			return
-		}
-		str += string(vl[1][i-1])
-
-	}
-	return st
-
 }
