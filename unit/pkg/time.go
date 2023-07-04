@@ -73,7 +73,7 @@ func Float2String(float642 float64, long int, suffix string) string {
 			return fmt.Sprintf(f, float642, suffix)
 		}
 	}
-	return v
+	return fmt.Sprintf(f, float642, suffix)
 }
 
 // Times produces a humanizeBytes readable representation of an SI size.
