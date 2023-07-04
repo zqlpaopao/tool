@@ -27,9 +27,7 @@ func main() {
 	}
 }
 
-
-
-func init(){
+func init() {
 	src.InitLoggerHandler(src.NewLogConfig(
 		src.InitInfoPathFileName("./demo_%Y_%m_%d.log"),
 		src.InitWarnPathFileName("./demo_%Y_%m_%d.log"),
@@ -37,18 +35,25 @@ func init(){
 		src.InitWithRotationCount(0), //保存的最大文件数 //默认禁用
 		src.InitWithRotationTime(0),  //最大旋转时间 默认值1小时
 		src.InitWithIp(1),
-		src.InitBufferSize(50)))
+		src.InitBufferSize(50),
+		src.InitCallFunc(func(level int, s string, back *src.CallBack) {
+			fmt.Println(level)
+			fmt.Println(s)
+			fmt.Println(back)
+		})))
 	//src.Debug("Debug",s).Msg("Debug")
 	//2048 比较合适
 	src.NewAsyncLogConfig(src.InitLogAsyncBuffSize(2048), src.InitLogAsyncGoNum(10))
+	src.DebugAsync("DebugAsync", "s1").MsgAsync("DebugAsync")
+	src.InfoAsync("tag", "s1").MsgAsync("MsgAsync")
+
 }
 
-
 /*
-	20s的时间对比，写入相同内容，异步可以写入
-	238M Feb 17 14:23 demo_2022_02_17.log
- 	92M Feb 17 14:26 demo_2022_02_17.log
-	差了三倍
+		20s的时间对比，写入相同内容，异步可以写入
+		238M Feb 17 14:23 demo_2022_02_17.log
+	 	92M Feb 17 14:26 demo_2022_02_17.log
+		差了三倍
 */
 func Log() {
 	type str struct {
@@ -67,17 +72,15 @@ func Log() {
 		sex:  []int{1, 2, 3, 41},
 	}
 
-		src.Info("InfoAsync", s).Msg("InfoAsync")
+	src.Info("InfoAsync", s).Msg("InfoAsync")
 
-		src.Warn("WarnAsync", s).Msg("WarnAsync")
+	src.Warn("WarnAsync", s).Msg("WarnAsync")
 
-		src.Debug("DebugAsync", s1).Msg("DebugAsync")
+	src.Debug("DebugAsync", s1).Msg("DebugAsync")
 
-		src.Error("ErrorAsync", s1).Msg("ErrorAsync")
-
+	src.Error("ErrorAsync", s1).Msg("ErrorAsync")
 
 }
-
 
 func AsyncLog() {
 	type str struct {
@@ -98,8 +101,8 @@ func AsyncLog() {
 
 	//debug info 是一个级别 warn和errorshi 是一个级别，不同级别可分别记录
 
-		src.InfoAsync("InfoAsync", s).MsgAsync("InfoAsync")
-		src.WarnAsync("WarnAsync", s).MsgAsync("WarnAsync")
-		src.DebugAsync("DebugAsync", s1).MsgAsync("DebugAsync")
-		src.ErrorAsync("ErrorAsync", s1).MsgAsync("ErrorAsync")
+	src.InfoAsync("InfoAsync", s).MsgAsync("InfoAsync")
+	src.WarnAsync("WarnAsync", s).MsgAsync("WarnAsync")
+	src.DebugAsync("DebugAsync", s1).MsgAsync("DebugAsync")
+	src.ErrorAsync("ErrorAsync", s1).MsgAsync("ErrorAsync")
 }

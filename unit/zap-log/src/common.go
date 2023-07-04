@@ -12,3 +12,13 @@ type CallerInfo struct {
 	FuncName string
 	FilePath string
 }
+
+type CallBack struct {
+	Ip     string
+	Params string
+	Msg    string
+}
+
+func DefaultCallBackFunc(_ int, _ string, _ *CallBack) {
+	return
+}

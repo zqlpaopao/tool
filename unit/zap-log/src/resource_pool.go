@@ -81,3 +81,45 @@ func (bp *BufferErrPool) Put(b *ErrorHandle) {
 func (bp *BufferErrPool) NumPooled() int {
 	return len(bp.c)
 }
+
+/*****************************************************CallBack Handler************************************/
+
+// CallBackBufferPool implements a pool of bytes.Buffers in the form of a bounded
+// channel.
+type CallBackBufferPool struct {
+	c chan *CallBack
+}
+
+// NewCallBackBufferPool creates a new NewCallBackBufferPool bounded to the given size.
+func NewCallBackBufferPool(size int) (bp *CallBackBufferPool) {
+	return &CallBackBufferPool{
+		c: make(chan *CallBack, size),
+	}
+}
+
+// Get gets a Buffer from the BufferPool, or creates a new one if none are
+// available in the pool.
+func (bp *CallBackBufferPool) Get() (b *CallBack) {
+	select {
+	case b = <-bp.c:
+	// reuse existing buffer
+	default:
+		// create new buffer
+		b = &CallBack{}
+	}
+	return
+}
+
+// Put returns the given Buffer to the BufferPool.
+func (bp *CallBackBufferPool) Put(b *CallBack) {
+	b.Reset()
+	select {
+	case bp.c <- b:
+	default: // Discard the buffer if the pool is full.
+	}
+}
+
+// NumPooled returns the number of items currently pooled.
+func (bp *CallBackBufferPool) NumPooled() int {
+	return len(bp.c)
+}
