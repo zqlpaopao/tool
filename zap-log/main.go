@@ -36,6 +36,7 @@ func init() {
 		src.InitWithRotationTime(0),  //最大旋转时间 默认值1小时
 		src.InitWithIp(1),
 		src.InitBufferSize(50),
+		src.InitCall(false),
 		src.InitCallFunc(func(level int, s string, back *src.CallBack) {
 			fmt.Println(level)
 			fmt.Println(s)
@@ -44,7 +45,7 @@ func init() {
 	//src.Debug("Debug",s).Msg("Debug")
 	//2048 比较合适
 	src.NewAsyncLogConfig(src.InitLogAsyncBuffSize(2048), src.InitLogAsyncGoNum(10))
-	src.DebugAsync("DebugAsync", "s1").MsgAsync("DebugAsync")
+	//src.DebugAsync("DebugAsync", "s1").MsgAsync("DebugAsync")
 	src.InfoAsync("tag", "s1").MsgAsync("MsgAsync")
 
 }

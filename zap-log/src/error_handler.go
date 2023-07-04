@@ -11,6 +11,7 @@ var (
 	//resource pool Reuse objects and avoid frequent affectionate objects
 	buffErrSize      *BufferErrPool
 	buffCallBackSize *CallBackBufferPool
+	callBack         bool
 	callBackFunc     func(level int, tag string, info *CallBack)
 )
 
@@ -34,9 +35,9 @@ func NewCallBackBuffSize(i int) {
 	buffCallBackSize = NewCallBackBufferPool(i)
 }
 
-// NewCallBackFunc Initialize the size of the call back func
-func NewCallBackFunc() {
-	callBackFunc = DefaultCallBackFunc
+// NewCallBack Initialize the size of the call back func is true
+func NewCallBack() {
+	callBack = true
 }
 
 // initParams init info args

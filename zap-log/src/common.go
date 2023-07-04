@@ -18,7 +18,3 @@ type CallBack struct {
 	Params string
 	Msg    string
 }
-
-func DefaultCallBackFunc(_ int, _ string, _ *CallBack) {
-	return
-}

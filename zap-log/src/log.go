@@ -205,13 +205,19 @@ func (e *ErrorHandle) Msg(msg string) {
 	case debugLevel:
 		DebugPrint(e.msg, c)
 	case infoLevel:
-		callBackFunc(debugLevel, e.msg, c)
+		if callBack {
+			callBackFunc(debugLevel, e.msg, c)
+		}
 		Logger.With(z).Sugar().Infof(e.msg)
 	case warnLevel:
-		callBackFunc(warnLevel, e.msg, c)
+		if callBack {
+			callBackFunc(debugLevel, e.msg, c)
+		}
 		Logger.With(z).Sugar().Warn(e.msg)
 	case errorLevel:
-		callBackFunc(errorLevel, e.msg, c)
+		if callBack {
+			callBackFunc(debugLevel, e.msg, c)
+		}
 		Logger.With(z).Sugar().Error(e.msg)
 	}
 }

@@ -90,15 +90,17 @@ func InitBufferSize(i int) OptionFunc {
 	}
 }
 
-// InitCallFunc Initialize the size of the resource pool
+// InitCallFunc Initialize the size of the call back func must callBack is true ,not will panic
 func InitCallFunc(f CallBackFunc) OptionFunc {
-	if f == nil {
-		return func(l *LogConfig) {
-			NewCallBackFunc()
-		}
-	}
 	return func(l *LogConfig) {
 		callBackFunc = f
+	}
+}
+
+// InitCall Initialize the size of the call back func true
+func InitCall(t bool) OptionFunc {
+	return func(l *LogConfig) {
+		callBack = t
 	}
 }
 
