@@ -57,21 +57,48 @@ func main() {
 	var i int = 1
 	var i1 string = "gg"
 	gLock := pkg.NewGlock(
-		pkg.WithSeizeTag(true),                       //持续争夺还是只是一次
-		pkg.WithSeizeCycle(2*time.Second),            //持续争夺还是只是一次
-		pkg.WithTerm(10),                             //持续争夺还是只是一次,单位s
-		pkg.WithLockKey("key"),                       //争多的标识
-		pkg.WithRedisTimeout(3*time.Second),          //redis的操作超时时间,默认3s
-		pkg.WithExpireTime(5),                        //master的超时时间
-		pkg.WithRenewalOften(pkg.DefaultRenewalTime), //如果抢到master，续期多长时间,默认expire的一半
+		//持续争夺还是只是一次
+		pkg.WithSeizeTag(true),
+
+		//过多久检测一次是否可以获得master，如果是master 就跳过，
+		//前提是 WithSeizeTag is true
+		pkg.WithSeizeCycle(2*time.Second),
+
+		//争夺的的标识 存如hash 中
+		// key member:group:
+		// WithLockKey 就是每个争夺成员的自己的标识
+		// val 是master 或者slave ,可以获取到所有的争夺的成员，
+		// 一般设置为ip 可以通过提供的默认方法获取当前ip，如果同一个程序就要设置为自己可以识别的标识
+		// 例如 member:group: key slave
+		pkg.WithLockKey("key"),
+
+		//redis的操作超时时间,默认3s
+		pkg.WithRedisTimeout(3*time.Second),
+
+		//master的超时时间
+		pkg.WithExpireTime(5),
+
+		//如果抢到master，续期多长时间,默认expire的一半
+		pkg.WithRenewalOften(pkg.DefaultRenewalTime),
+
 		pkg.WithRedisClient(redis),
-		pkg.WithMasterKey("master"), //master标识，一个项目可能需要多个不同master的抢锁操作，有默认值
-		pkg.WithLockFailFunc(func(i ...interface{}) { //抢锁失败回调函数
+
+		// 此标识是表示 此包在项目中可以使用多次，因为一个项目可能存在多个不同组的争夺master操作
+		// 例如 第一组 a 、b、c 争夺 master1 谁拿到谁就是master
+		// 但是项目中还需要使用 分布式锁  n、 f、 j 争夺 master-1 谁拿到 谁就是主  ，分为不同组的
+		// master key争夺
+		//master标识，一个项目可能需要多个不同master的抢锁操作，有默认值 member:master
+		pkg.WithMasterKey("master"),
+
+		//抢锁失败回调函数
+		pkg.WithLockFailFunc(func(i ...interface{}) {
 			for _, v := range i {
 				fmt.Println("传入的参数", v)
 			}
 		}),
-		pkg.WithLockSuccessFunc(func(i ...interface{}) { //抢锁成功回调函数
+
+		//抢锁成功回调函数
+		pkg.WithLockSuccessFunc(func(i ...interface{}) {
 			for _, v := range i {
 				fmt.Println("传入的参数成功", v)
 			}
@@ -80,6 +107,7 @@ func main() {
 
 	gLock.Lock(i, i1)
 
+	//定时获取所有竞争的成员 和 谁是master
 	for {
 
 		fmt.Println(gLock.GetMembers()) //全部竞争锁的成员
