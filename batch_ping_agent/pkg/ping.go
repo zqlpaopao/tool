@@ -75,10 +75,8 @@ type packet struct {
 type Packet struct {
 	StartTime time.Time
 	EndTime   time.Time
-	IPAddr    *net.IPAddr
 	Addr      string
 	uuid      string
-	Rtt       time.Duration
 	NBytes    int
 	Seq       int
 	TTL       int
