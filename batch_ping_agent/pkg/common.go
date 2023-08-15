@@ -14,7 +14,7 @@ const (
 
 	PoolPingSize  = 15
 	PoolUUIDSize  = 15
-	PoolArraySize = 15
+	PoolArraySize = 60
 
 	ErrChanSize = 5
 
