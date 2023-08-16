@@ -139,6 +139,5 @@ func SetByte(res [36]byte) {
 	select {
 	case pool.array <- res:
 	default:
-
 	}
 }
