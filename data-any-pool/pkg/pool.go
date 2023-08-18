@@ -6,6 +6,7 @@ package pkg
 type Pool[T any] struct {
 	Data chan *T
 	New  func() *T
+	Size int
 }
 
 // Get  the data
