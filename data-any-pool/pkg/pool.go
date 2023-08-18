@@ -23,8 +23,6 @@ func (p *Pool[T]) Get() (res *T) {
 func (p *Pool[T]) Put(res *T) {
 	select {
 	case p.Data <- res:
-		return
 	default:
-
 	}
 }
