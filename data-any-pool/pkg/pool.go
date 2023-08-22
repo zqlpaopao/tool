@@ -5,7 +5,7 @@ package pkg
 // New that needs to be created when the cache does not exist
 type Pool[T any] struct {
 	Data chan *T
-	New  func() *T
+	New  func(size int) *T
 	Size int
 }
 
@@ -15,7 +15,7 @@ func (p *Pool[T]) Get() (res *T) {
 	case res, _ = <-p.Data:
 		return
 	default:
-		return p.New()
+		return p.New(p.Size)
 	}
 }
 
