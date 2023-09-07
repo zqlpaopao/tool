@@ -38,14 +38,15 @@ func main() {
 // end------------------------ 4323473 2023-08-24 17:45:35
 var num int32
 
-const Len = 5000
+const Len = 1
 
 func Loop() {
 	pid := 6001
 
 	p := ping.NewPoolWithOptions(
 		ping.WithPoolSize(Len),
-		ping.WithPrepareChLen(Len),
+		ping.WithPrepareChV4Len(Len),
+		ping.WithPrepareChV6Len(Len),
 		ping.WithResChanLen(Len),
 		ping.WithSendWorker(1),
 		ping.WithCallbackWorker(5),
@@ -64,14 +65,15 @@ func Loop() {
 		}),
 		ping.WithOnRevFunc(func(pings *ping.Ping, packet *ping.Packet) {
 			//fmt.Println("ip", pings.Addr, packet.StartTime, packet.EndTime)
-			//st := ping.StatisticsLog(pings, packet)
-			//ping.Debug(st)
+			st := ping.StatisticsLog(pings, packet)
+			ping.Debug(st)
 			atomic.AddInt32(&num, 1)
 
 		}),
 		ping.WithErrorCallback(func(err *ping.ErrInfo) {
 			fmt.Println(err.Tag, err.Ping, err.Err)
 		}),
+		ping.WithV6(true),
 	).Run()
 	err := p.Error()
 	if err != nil {
@@ -79,11 +81,14 @@ func Loop() {
 	}
 
 	s := mp[:Len]
+	fmt.Println(s)
+	//os.Exit(1)
 	for _, v := range s {
 		ip := net.ParseIP(v)
 		bd := p.GetObjectPingPool()
 		bd.SetDstAddr(v).
-			SetIpV4().
+			//设置是否是ipv4,否则是ipv6 默认ipv6不开启
+			//SetIpV4().
 			SetResolveIpAddr(&net.IPAddr{IP: ip}).
 			SetSize(60).
 			SetTtl(60).
@@ -114,9 +119,9 @@ func Loop() {
 				}
 				//return
 				a++
-				if a%1000 == 0 {
-					time.Sleep(50 * time.Millisecond)
-				}
+				//if a%1000 == 0 {
+				time.Sleep(1 * time.Second)
+				//}
 			}
 
 		}
@@ -152,6 +157,7 @@ var rs = make(map[string]*ping.Ping, 200)
 //		"11.97.22.117":    {},
 //	}
 var mp = []string{
+	"fe80::10a7:8086:41b7:e153",
 	"10.179.45.4",
 	"11.127.19.239",
 	"10.179.45.46",
