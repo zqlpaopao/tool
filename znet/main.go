@@ -1,21 +1,34 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/zqlpaopao/tool/znet/ping"
+	"github.com/zqlpaopao/tool/znet/icmp"
 	"golang.org/x/net/bpf"
 	"log"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
+	"strings"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
-func main() {
+var t, r, n *int
 
-	runtime.GOMAXPROCS(2)
+func main() {
+	l := flag.Int("l", 5000, "")
+	t = flag.Int("t", 5000, "")
+	r = flag.Int("r", 5000, "")
+	n = flag.Int("n", 500, "")
+	flag.Parse()
+	Len = *l
+	//fmt.Println(Len, *t, *r, *n)
+	fmt.Println(int(500 * time.Millisecond))
+	//os.Exit(1)
+	runtime.GOMAXPROCS(5)
 	go func() {
 		log.Println(http.ListenAndServe("0.0.0.0:6061", nil))
 	}()
@@ -38,22 +51,22 @@ func main() {
 // end------------------------ 4323473 2023-08-24 17:45:35
 var num int32
 
-const Len = 1
+var Len = 1
 
+// ip -s link show eth0
 func Loop() {
-	pid := 6001
 
-	p := ping.NewPoolWithOptions(
-		ping.WithPoolSize(Len),
-		ping.WithPrepareChV4Len(Len),
-		ping.WithPrepareChV6Len(Len),
-		ping.WithResChanLen(Len),
-		ping.WithSendWorker(1),
-		ping.WithCallbackWorker(5),
-		ping.WithProtocol("icmp"),
-		ping.WithDataSize(60),
-		ping.WithPid(pid),
-		ping.WithBPFFilter(ping.Filter{
+	pid := 6001
+	p := icmp.NewPoolWithOptions(
+		icmp.WithPoolSize(Len),
+		icmp.WithPrepareChV4Len(Len),
+		icmp.WithPrepareChV6Len(Len),
+		icmp.WithResChanLen(Len),
+		icmp.WithSendWorker(1),
+		icmp.WithCallbackWorker(10),
+		icmp.WithDataSize(60),
+		icmp.WithPid(pid),
+		icmp.WithBPFFilter(icmp.Filter{
 			// Load "EtherType" field from the ethernet header.
 			bpf.LoadAbsolute{Off: 24, Size: 2},
 			//bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 6001, SkipFalse: 1},
@@ -63,17 +76,21 @@ func Loop() {
 			// Verdict is "ignore packet."
 			bpf.RetConstant{Val: 0},
 		}),
-		ping.WithOnRevFunc(func(pings *ping.Ping, packet *ping.Packet) {
-			//fmt.Println("ip", pings.Addr, packet.StartTime, packet.EndTime)
-			st := ping.StatisticsLog(pings, packet)
-			ping.Debug(st)
+		icmp.WithOnRevFunc(func(packet *icmp.Packet) {
+			st := icmp.StatisticsLog(packet)
+			icmp.Debug(st)
+
 			atomic.AddInt32(&num, 1)
 
 		}),
-		ping.WithErrorCallback(func(err *ping.ErrInfo) {
-			fmt.Println(err.Tag, err.Ping, err.Err)
+		icmp.WithErrorCallback(func(err *icmp.ErrInfo) {
+			fmt.Println("recv", err.Tag, err.Ping, err.Err)
+			//os.Exit(1)
 		}),
-		ping.WithV6(true),
+		icmp.WithV6(),
+		//icmp.WithReceiveMMsgLen(*r),
+		//icmp.WithReadBuffer(8388608),
+		//icmp.WithWriteBuffer(8388608),
 	).Run()
 	err := p.Error()
 	if err != nil {
@@ -81,68 +98,64 @@ func Loop() {
 	}
 
 	s := mp[:Len]
-	fmt.Println(s)
-	//os.Exit(1)
 	for _, v := range s {
+		//v = "::1"
+		v = "110.242.68.66"
 		ip := net.ParseIP(v)
+
 		bd := p.GetObjectPingPool()
-		bd.SetDstAddr(v).
+		if strings.Contains(v, ":") {
+			v6 := [16]byte{}
+			copy(v6[:], ip.To16()[:])
 			//设置是否是ipv4,否则是ipv6 默认ipv6不开启
-			//SetIpV4().
-			SetResolveIpAddr(&net.IPAddr{IP: ip}).
-			SetSize(60).
+			bd.SetDestAddrV6(&syscall.SockaddrInet6{
+				Port:   34434,
+				ZoneId: 0,
+				Addr:   v6,
+			}).SetIpv6()
+		} else {
+			//syscall.
+			v4 := [4]byte{}
+			copy(v4[:], ip.To4()[:])
+			bd.
+				SetDestAddrV4(&syscall.SockaddrInet4{
+					Port: 0,
+					Addr: v4,
+				})
+		}
+		bd.
+			SetSize(19).
 			SetTtl(60).
-			SetUUid(ping.NewUUid().String()).
-			SetPrivileged(true).
-			SetNetwork("icmp").
-			SetPID(pid).
+			SetSeq(6).
 			SetIcmp()
 		rs[v] = bd
 	}
-	t := time.NewTimer(60 * time.Second)
-	var incr int64
+	t1 := time.NewTimer(60 * time.Second)
+	var a int64
 
 	for {
-
 		select {
-		case <-t.C:
+		case <-t1.C:
 			fmt.Printf("end------------------------个数--%d--len-rs--%d,总rtt---%d ，时间--%v\n", Len, len(rs), atomic.LoadInt32(&num), time.Now().Format(time.DateTime))
-			t.Reset(time.Second * 60)
+			t1.Reset(time.Second * 60)
 		default:
-			var a int64
-
 			for _, V := range rs {
-				V.SetID(incr)
-				incr++
 				if err = p.Submit(V); nil != err {
 					panic(err)
 				}
-				//return
 				a++
-				//if a%1000 == 0 {
-				time.Sleep(1 * time.Second)
-				//}
+				if a%int64((*n)) == 0 {
+					time.Sleep(time.Duration(*t))
+
+				}
+				//return
 			}
 
 		}
 	}
 }
 
-func hostIpV4(p *ping.Pool) {
-	//var err error
-	//qq := pool.GetPing()
-	//if err = qq.SetAddr("qq.com"); nil != err {
-	//	panic(err)
-	//}
-	//qq.SetSize(40).SetTtl(60).SetUUid(uuid.New())
-	//
-	//if err = p.Submit(qq); nil != err {
-	//	panic(err)
-	//}
-
-}
-
-var rs = make(map[string]*ping.Ping, 200)
+var rs = make(map[string]*icmp.Ping, 200)
 
 //	var mp = map[string]struct{}{
 //		"110.242.68.66":   {},
@@ -157,7 +170,8 @@ var rs = make(map[string]*ping.Ping, 200)
 //		"11.97.22.117":    {},
 //	}
 var mp = []string{
-	"fe80::10a7:8086:41b7:e153",
+	//"fe80::ec73:eeff:fe7f:a113",
+	"110.242.68.66",
 	"10.179.45.4",
 	"11.127.19.239",
 	"10.179.45.46",
