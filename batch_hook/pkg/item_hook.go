@@ -47,7 +47,7 @@ func (o *OptionItem[T]) doing() {
 				task = []T{}
 				goto END
 			}
-			task = append(task, *v)
+			task = append(task, v)
 			if len(task) >= o.doingSize {
 				o.hook(&task)
 				task = make([]T, 0, o.doingSize)
