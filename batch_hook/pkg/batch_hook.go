@@ -27,7 +27,7 @@ func (b *BatchHook[T]) InitTask(task InitTaskModel[T]) (err error) {
 }
 
 // Submit Submit multiple tasks by name
-func (b *BatchHook[T]) Submit(items *T) {
+func (b *BatchHook[T]) Submit(items T) {
 	b.batchOpt.itemCh <- items
 }
 
