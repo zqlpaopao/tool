@@ -159,3 +159,6 @@ func main(){
 
 # 多节点、多集群kafka写入思路
 [github]（https://github.com/smallnest/gofer/tree/master）
+
+# 单机集群限流
+[-](https://github.com/throttled/throttled)
