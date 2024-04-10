@@ -6,42 +6,46 @@ import (
 	"testing"
 )
 
+var Size = 100
+
+type Model *Model1
+type Model1 struct {
+	Name    string
+	Age     string
+	Sex     int
+	Address map[string]string
+}
+
 func BenchmarkPoolGet(b *testing.B) {
-	var p = &Pool[[]byte]{
-		Data: make(chan *[]byte, 50),
-		New: func() *[]byte {
-			return &[]byte{}
-		},
-	}
+	var p = NewPool[Model](10,
+		100,
+		func(size int) Model {
+			return &Model1{}
+		})
 
 	for i := 0; i < b.N; i++ {
 		_ = p.Get()
-
-		//p.SetByte(res)
 	}
 }
 
 func BenchmarkPoolSet(b *testing.B) {
-	var p = &Pool[[]byte]{
-		Data: make(chan *[]byte, 50),
-		New: func() *[]byte {
-			return &[]byte{}
-		},
-	}
+	var p = NewPool[Model](10,
+		10,
+		func(size int) Model {
+			return &Model1{}
+		})
 
 	for i := 0; i < b.N; i++ {
-		p.Put(&[]byte{})
-
+		p.Put(&Model1{})
 	}
 }
 
 func BenchmarkPoolGetSet(b *testing.B) {
-	var p = &Pool[[]byte]{
-		Data: make(chan *[]byte, 50),
-		New: func() *[]byte {
-			return &[]byte{}
-		},
-	}
+	var p = NewPool[Model](10,
+		10,
+		func(size int) Model {
+			return &Model1{}
+		})
 
 	for i := 0; i < b.N; i++ {
 		res := p.Get()
@@ -52,12 +56,12 @@ func BenchmarkPoolGetSet(b *testing.B) {
 
 func BenchmarkSyncPoolGet(b *testing.B) {
 	var p = &sync.Pool{New: func() any {
-		return []byte{}
+		return &Model1{}
 	}}
 
 	for i := 0; i < b.N; i++ {
 		res := p.Get()
-		if _, ok := res.([]byte); !ok {
+		if _, ok := res.(Model); !ok {
 			continue
 		}
 		//p.b.Put(res)
@@ -66,23 +70,21 @@ func BenchmarkSyncPoolGet(b *testing.B) {
 
 func BenchmarkSyncPoolSet(b *testing.B) {
 	var p = &sync.Pool{New: func() any {
-		return []byte{}
+		return &Model1{}
 	}}
-
 	for i := 0; i < b.N; i++ {
-		res := []byte{}
-		p.Put(res)
+		p.Put(&Model1{})
 	}
 }
 
 func BenchmarkSyncPoolGetSet(b *testing.B) {
 	var p = &sync.Pool{New: func() any {
-		return []byte{}
+		return &Model1{}
 	}}
 
 	for i := 0; i < b.N; i++ {
 		res := p.Get()
-		if _, ok := res.([]byte); !ok {
+		if _, ok := res.(Model); !ok {
 			continue
 		}
 		p.Put(res)
@@ -90,60 +92,63 @@ func BenchmarkSyncPoolGetSet(b *testing.B) {
 }
 
 func BenchmarkPoolsZeroGet(b *testing.B) {
-	var p = zeropool.New[[]byte](func() []byte {
-		return []byte{}
+	var p = zeropool.New[Model](func() Model {
+		return &Model1{}
 	})
 
 	for i := 0; i < b.N; i++ {
 		_ = p.Get()
-
-		//p.Put(res)
 	}
 }
 
 func BenchmarkPoolsZeroSet(b *testing.B) {
-	var p = zeropool.New[[]byte](func() []byte {
-		return []byte{}
+	var p = zeropool.New[Model](func() Model {
+		return &Model1{}
 	})
 
 	for i := 0; i < b.N; i++ {
-		res := []byte{}
-
-		p.Put(res)
+		p.Put(&Model1{})
 	}
 }
 
 func BenchmarkPoolsZeroGetSet(b *testing.B) {
-	var p = zeropool.New[[]byte](func() []byte {
-		return []byte{}
+	var p = zeropool.New[Model](func() Model {
+		return &Model1{}
 	})
 
 	for i := 0; i < b.N; i++ {
 		res := p.Get()
-
 		p.Put(res)
 	}
 }
 
-/*
-$ go test -bench=. -benchmem
-goos: darwin
-goarch: arm64
-pkg: github.com/xxx/tool/data-any-pool/pkg
-BenchmarkPoolGet-10             53016801                22.35 ns/op           24 B/op          1 allocs/op
-BenchmarkSyncPoolGet-10         24650505                48.78 ns/op           24 B/op          1 allocs/op
-BenchmarkPoolsZeroGet-10        18879105                61.91 ns/op           51 B/op          1 allocs/op
+func BenchmarkSyncPoolAnyGet(b *testing.B) {
+	var p = New[Model](func() Model {
+		return &Model1{}
+	})
 
-BenchmarkPoolSet-10             56471364                21.35 ns/op           24 B/op          1 allocs/op
-BenchmarkSyncPoolSet-10         36137818                32.39 ns/op           52 B/op          1 allocs/op
-BenchmarkPoolsZeroSet-10        19359301                61.38 ns/op           49 B/op          1 allocs/op
+	for i := 0; i < b.N; i++ {
+		_ = p.Get()
+	}
+}
 
-BenchmarkPoolGetSet-10          43514325                27.35 ns/op            0 B/op          0 allocs/op
-BenchmarkSyncPoolGetSet-10      135167949                8.479 ns/op           0 B/op          0 allocs/op
-BenchmarkPoolsZeroGetSet-10     69344953                17.26 ns/op            0 B/op          0 allocs/op
-PASS
-ok      github.com/xxx/tool/data-any-pool/pkg     12.094s
+func BenchmarkSyncPoolAnySet(b *testing.B) {
+	var p = New[Model](func() Model {
+		return &Model1{}
+	})
 
+	for i := 0; i < b.N; i++ {
+		p.Put(&Model1{})
+	}
+}
 
+func BenchmarkSyncPoolAnyGetSet(b *testing.B) {
+	var p = New[Model](func() Model {
+		return &Model1{}
+	})
 
-*/
+	for i := 0; i < b.N; i++ {
+		res := p.Get()
+		p.Put(res)
+	}
+}
