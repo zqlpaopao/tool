@@ -11,9 +11,10 @@ import (
 	"github.com/zqlpaopao/tool/project/gin-model/common"
 	strTool "github.com/zqlpaopao/tool/string-byte/src"
 	log "github.com/zqlpaopao/tool/zap-log/src"
-	"io/ioutil"
+	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -137,13 +138,13 @@ func requestParams(g *gin.Context) (str string, err error) {
 		cy   string
 	)
 	cy = g.Request.Header.Get("Content-Type")
-	if cy == common.ApplicationJson {
-		if data, err = ioutil.ReadAll(g.Request.Body); err != nil {
+	if strings.Contains(cy, common.ApplicationJson) {
+		if data, err = io.ReadAll(g.Request.Body); err != nil {
 			return
 		}
-		g.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+		g.Request.Body = io.NopCloser(bytes.NewBuffer(data))
 		return string(data), nil
-	} else if cy == common.MultipartFormData {
+	} else if strings.Contains(cy, common.MultipartFormData) {
 		if par, err = g.MultipartForm(); nil != err {
 			return
 		}
