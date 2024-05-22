@@ -3,7 +3,6 @@ package pkg
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 )
 
@@ -106,7 +105,6 @@ func (p *PageHandler[P, R]) Loop(wg *sync.WaitGroup) {
 			}
 			p.ItemRequest(v)
 		case <-p.ctx.Done():
-			fmt.Println("<-p.ctx.Done()")
 			goto END
 		}
 	}
