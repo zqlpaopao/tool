@@ -138,6 +138,10 @@ func (c *confManager) GetEsConf() (*viper.Viper, error) {
 	return c.getViper("es")
 }
 
+func (c *confManager) GetMongodbConf() (*viper.Viper, error) {
+	return c.getViper("mongodb")
+}
+
 func (c *confManager) GetLogLayout(project string, file string) (logPath string, err error) {
 	viperOb, err := c.GetLogsConf()
 	if err != nil {
