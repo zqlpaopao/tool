@@ -54,6 +54,6 @@ func humanizeBytes(s float64, long int, base uint, sizes []string) string {
 // Bytes(82854982) 3 -> 82.855 MB
 // Bytes(82854982) 2 -> 82.85 MB
 // Bytes(82854982) 0 -> 83 MB
-func Bytes(s float64, long int) string {
+func BytesBps(s float64, long int) string {
 	return humanizeBytes(s, long, 1000, bytesSize)
 }
