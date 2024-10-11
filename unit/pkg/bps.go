@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-var bytesSizeBps = []string{"BPS", "kBPS", "MBPS", "GBPS", "TBPS", "PBPS", "EBPS"}
+var bytesSizeBps = []string{"BPS", "KBPS", "MBPS", "GBPS", "TBPS", "PBPS", "EBPS"}
 
 func humanizeBytesBps(s float64, long int, base uint, sizes []string) string {
 	if uint(s) < base {
