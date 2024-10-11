@@ -8,23 +8,9 @@ import (
 	"strconv"
 )
 
-var FPix = []string{
-	"%.0f %s",
-	"%.1f %s",
-	"%.2f %s",
-	"%.3f %s",
-	"%.4f %s",
-	"%.5f %s",
-	"%.6f %s",
-}
+var bytesSizeBps = []string{"BPS", "kBPS", "MBPS", "GBPS", "TBPS", "PBPS", "EBPS"}
 
-var bytesSize = []string{"BPS", "kBPS", "MBPS", "GBPS", "TBPS", "PBPS", "EBPS"}
-
-func logN(n, b float64) float64 {
-	return math.Log(n) / math.Log(b)
-}
-
-func humanizeBytes(s float64, long int, base uint, sizes []string) string {
+func humanizeBytesBps(s float64, long int, base uint, sizes []string) string {
 	if uint(s) < base {
 		return fmt.Sprintf("%f B", s)
 	}
@@ -55,5 +41,5 @@ func humanizeBytes(s float64, long int, base uint, sizes []string) string {
 // Bytes(82854982) 2 -> 82.85 MB
 // Bytes(82854982) 0 -> 83 MB
 func BytesBps(s float64, long int) string {
-	return humanizeBytes(s, long, 1000, bytesSize)
+	return humanizeBytesBps(s, long, 1000, bytesSizeBps)
 }
