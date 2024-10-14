@@ -23,7 +23,7 @@ func humanizeBytesBps(s float64, long int, base uint, sizes []string) string {
 
 	suffix := sizes[int(e)]
 
-	f := "%.2f %s"
+	f := "%.2f%s"
 	if long < 7 {
 		f = FPix[long]
 	}
