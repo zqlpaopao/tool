@@ -8,13 +8,13 @@ import (
 )
 
 var FPix = []string{
-	"%.0f %s",
-	"%.1f %s",
-	"%.2f %s",
-	"%.3f %s",
-	"%.4f %s",
-	"%.5f %s",
-	"%.6f %s",
+	"%.0f%s",
+	"%.1f%s",
+	"%.2f%s",
+	"%.3f%s",
+	"%.4f%s",
+	"%.5f%s",
+	"%.6f%s",
 }
 
 var bytesSize = []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
