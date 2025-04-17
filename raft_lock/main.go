@@ -21,6 +21,8 @@ func main() {
 
 	p.Init()
 
+	fmt.Println(p.GetLockInfo())
+
 	for i := 0; i < 10; i++ {
 		go makeRaft(p, src.GetEth0()+"_"+strconv.Itoa(i), time.Second*30)
 	}

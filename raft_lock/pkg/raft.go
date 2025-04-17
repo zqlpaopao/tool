@@ -11,16 +11,40 @@ type Raft struct {
 	rdb RDbClient
 }
 
+// Lock -- --------------------------
+// --> @Describe
+// --> @params
+// --> @return
+// -- ------------------------------------
 func (r *Raft) Lock(s string, duration time.Duration) (int64, error) {
 	return r.rdb.Lock(s, duration)
 }
 
+// UnLock -- --------------------------
+// --> @Describe
+// --> @params
+// --> @return
+// -- ------------------------------------
 func (r *Raft) UnLock(lockName string) (int64, error) {
 	return r.rdb.UnLock(lockName)
 }
 
+// Renewal -- --------------------------
+// --> @Describe
+// --> @params
+// --> @return
+// -- ------------------------------------
 func (r *Raft) Renewal(s string, duration time.Duration) (int64, error) {
 	return r.rdb.Renewal(s, duration)
+}
+
+// GetLockInfo  -- --------------------------
+// --> @Describe
+// --> @params
+// --> @return
+// -- ------------------------------------
+func (r *Raft) GetLockInfo() (map[string]string, error) {
+	return r.rdb.GetLockInfo()
 }
 
 // NewRaft -- --------------------------

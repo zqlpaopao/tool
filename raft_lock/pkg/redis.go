@@ -110,6 +110,19 @@ func (r *RdbCli) Renewal(lockName string, duration time.Duration) (res int64, er
 
 }
 
+// GetLockInfo -- --------------------------
+// --> @Describe
+// --> @params
+// --> @return
+// -- ------------------------------------
+func (r *RdbCli) GetLockInfo() (res map[string]string, err error) {
+	if r.isCluster {
+		return r.cluster.HGetAll(context.Background(), r.groupName).Result()
+	} else {
+		return r.single.HGetAll(context.Background(), r.groupName).Result()
+	}
+}
+
 // UnLock -- --------------------------
 // --> @Describe
 // --> @params
