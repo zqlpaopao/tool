@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"testing"
 	"time"
 )
@@ -52,7 +52,7 @@ func BenchmarkGLock_Lock(b *testing.B) {
 	gLock := NewGlock(
 		WithSeizeTag(true),                   //持续争夺还是只是一次
 		WithSeizeCycle(2*time.Second),        //持续争夺还是只是一次
-		WithLockKey("key233"),                   //争多的标识
+		WithLockKey("key233"),                //争多的标识
 		WithRedisTimeout(3*time.Second),      //redis的操作超时时间,默认3s
 		WithExpireTime(2),                    //master的超时时间
 		WithRenewalOften(DefaultRenewalTime), //如果抢到master，续期多长时间,默认expire的一半
@@ -77,6 +77,6 @@ func BenchmarkGLock_Lock(b *testing.B) {
 		gLock.UnLock()
 		fmt.Println(gLock.IsMaster())
 		fmt.Println(gLock.Error())
-		time.Sleep(time.Millisecond*500)
+		time.Sleep(time.Millisecond * 500)
 	}
 }

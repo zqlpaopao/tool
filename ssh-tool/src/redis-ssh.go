@@ -2,8 +2,8 @@ package src
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
 	redisGO "github.com/gomodule/redigo/redis"
+	"github.com/redis/go-redis/v9"
 	"net"
 )
 
@@ -12,12 +12,12 @@ type RedisConfig struct {
 	DbNum                    int
 }
 
-//GoRedisClient -- ----------------------------
-//--> @Description
-//--> @Param
-//--> @return
-//-- ----------------------------
-//Redis(go-redis/redis)
+// GoRedisClient -- ----------------------------
+// --> @Description
+// --> @Param
+// --> @return
+// -- ----------------------------
+// Redis(go-redis/redis)
 func (r *RedisConfig) GoRedisClient(client Client) (redisCli *redis.Client, err error) {
 	redisCli = redis.NewClient(&redis.Options{
 		Network: "tcp", // 连接方式，默认使用tcp，可省略
@@ -34,12 +34,12 @@ func (r *RedisConfig) GoRedisClient(client Client) (redisCli *redis.Client, err 
 	return
 }
 
-//RedisGOClient -- ----------------------------
-//--> @Description
-//--> @Param
-//--> @return
-//-- ----------------------------
-//https://github.com/gomodule/redigo
+// RedisGOClient -- ----------------------------
+// --> @Description
+// --> @Param
+// --> @return
+// -- ----------------------------
+// https://github.com/gomodule/redigo
 func (r *RedisConfig) RedisGOClient(client Client) (redisConn redisGO.Conn, err error) {
 	var conn net.Conn
 	if conn, err = client.client.Dial("tcp", r.IpPort); nil != err {

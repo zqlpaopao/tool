@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"crypto/tls"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"net"
 	"time"
 )

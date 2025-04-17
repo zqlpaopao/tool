@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"github.com/go-redis/redis/v8"
 	"github.com/zqlpaopao/tool/register-discovery/pkg/common"
 	"time"
 )

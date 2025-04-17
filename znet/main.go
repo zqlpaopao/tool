@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/zqlpaopao/tool/znet/icmp"
+	"github.com/zqlpaopao/tool/znet/user_icmp"
 	"golang.org/x/net/bpf"
 	"log"
 	"net"
@@ -57,16 +57,16 @@ var Len = 1
 func Loop() {
 
 	pid := 6001
-	p := icmp.NewPoolWithOptions(
-		icmp.WithPoolSize(Len),
-		icmp.WithPrepareChV4Len(Len),
-		icmp.WithPrepareChV6Len(Len),
-		icmp.WithResChanLen(Len),
-		icmp.WithSendWorker(1),
-		icmp.WithCallbackWorker(10),
-		icmp.WithDataSize(60),
-		icmp.WithPid(pid),
-		icmp.WithBPFFilter(icmp.Filter{
+	p := user_icmp.NewPoolWithOptions(
+		user_icmp.WithPoolSize(Len),
+		user_icmp.WithPrepareChV4Len(Len),
+		user_icmp.WithPrepareChV6Len(Len),
+		user_icmp.WithResChanLen(Len),
+		user_icmp.WithSendWorker(1),
+		user_icmp.WithCallbackWorker(10),
+		user_icmp.WithDataSize(60),
+		user_icmp.WithPid(pid),
+		user_icmp.WithBPFFilter(user_icmp.Filter{
 			// Load "EtherType" field from the ethernet header.
 			bpf.LoadAbsolute{Off: 24, Size: 2},
 			//bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 6001, SkipFalse: 1},
@@ -76,21 +76,21 @@ func Loop() {
 			// Verdict is "ignore packet."
 			bpf.RetConstant{Val: 0},
 		}),
-		icmp.WithOnRevFunc(func(packet *icmp.Packet) {
-			st := icmp.StatisticsLog(packet)
-			icmp.Debug(st)
+		user_icmp.WithOnRevFunc(func(packet *user_icmp.Packet) {
+			st := user_icmp.StatisticsLog(packet)
+			user_icmp.Debug(st)
 
 			atomic.AddInt32(&num, 1)
 
 		}),
-		icmp.WithErrorCallback(func(err *icmp.ErrInfo) {
+		user_icmp.WithErrorCallback(func(err *user_icmp.ErrInfo) {
 			fmt.Println("recv", err.Tag, err.Ping, err.Err)
 			//os.Exit(1)
 		}),
-		icmp.WithV6(),
-		//icmp.WithReceiveMMsgLen(*r),
-		//icmp.WithReadBuffer(8388608),
-		//icmp.WithWriteBuffer(8388608),
+		user_icmp.WithV6(),
+		//user_icmp.WithReceiveMMsgLen(*r),
+		//user_icmp.WithReadBuffer(8388608),
+		//user_icmp.WithWriteBuffer(8388608),
 	).Run()
 	err := p.Error()
 	if err != nil {

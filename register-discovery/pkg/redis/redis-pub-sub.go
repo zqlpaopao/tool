@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	format "github.com/zqlpaopao/tool/format/src"
 	"github.com/zqlpaopao/tool/register-discovery/pkg"
 	"log"
