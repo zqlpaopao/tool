@@ -1,6 +1,6 @@
 module github.com/zqlpaopao/tool
 
-go 1.24.0
+go 1.23.0
 
 require (
 	github.com/beego/beego/v2 v2.3.7
