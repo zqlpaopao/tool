@@ -90,8 +90,6 @@ func (r *RdbCli) Renewal(lockName string, duration time.Duration) (res int64, er
 			return
 		}
 	}
-
-	fmt.Println(r.groupName, fmt.Sprintf("%v%v", DefaultSameSlot, lockName))
 	for retry > 0 {
 		if res, err = r.LoadScript(sha, []string{
 			r.groupName,
@@ -100,7 +98,6 @@ func (r *RdbCli) Renewal(lockName string, duration time.Duration) (res int64, er
 				t.Add(duration).Unix()}); res == Success {
 			return
 		}
-		fmt.Println("re", res, err)
 		if err != nil && strings.Contains(err.Error(), "NOSCRIPT") {
 			_, _ = r.makeSha(RDBRenewal, RenewalCmd)
 		}

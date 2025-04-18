@@ -11,10 +11,12 @@ import (
 func main() {
 	p := pkg.NewProxy(pkg.NewRaft(pkg.NewRedisOption(
 		pkg.WithAddr([]string{
-			"127.0.0.1:6380",
-			"127.0.0.1:6381",
-			"127.0.0.1:6382",
+			"127.0.0.1:6379",
+			//"127.0.0.1:6380",
+			//"127.0.0.1:6381",
+			//"127.0.0.1:6382",
 		}),
+		pkg.WithIsCluster(false),
 		pkg.WithLockNum(3),
 		pkg.WithNodeNum(3),
 	)))
