@@ -19,6 +19,7 @@ func main() {
 		pkg.WithIsCluster(false),
 		pkg.WithLockNum(3),
 		pkg.WithNodeNum(3),
+		pkg.WithGroupName("zql"),
 	)))
 
 	p.Init()

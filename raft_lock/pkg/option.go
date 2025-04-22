@@ -65,7 +65,7 @@ func (o RedisOption) WithOptions(opt ...Option) *RedisOption {
 // WithGroupName Set the number of ReadTimeout. The default is  5s
 func WithGroupName(groupName string) OpFunc {
 	return func(o *RedisOption) {
-		o.groupName = fmt.Sprintf("{%v}", groupName)
+		o.groupName = fmt.Sprintf("%v%v", DefaultSameSlot, groupName)
 	}
 }
 
