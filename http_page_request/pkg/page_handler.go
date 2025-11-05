@@ -72,7 +72,7 @@ func (p *PageHandler[P, R]) MakeLoop() {
 		loop = (p.total + p.opt.limit) / p.opt.limit
 	)
 	p.CustomerLoop(wg)
-	for i := 0; i < loop; i++ {
+	for i := 0; i <= loop; i++ {
 		p.loopChan <- i
 	}
 	close(p.loopChan)
