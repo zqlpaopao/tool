@@ -142,6 +142,10 @@ func (c *confManager) GetMongodbConf() (*viper.Viper, error) {
 	return c.getViper("mongodb")
 }
 
+func (c *confManager) GetPgSqlConf() (*viper.Viper, error) {
+	return c.getViper("pgsql")
+}
+
 func (c *confManager) GetLogLayout(project string, file string) (logPath string, err error) {
 	viperOb, err := c.GetLogsConf()
 	if err != nil {
