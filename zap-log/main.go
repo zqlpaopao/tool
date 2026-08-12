@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/zqlpaopao/tool/zap-log/src"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/zqlpaopao/tool/zap-log/src"
 )
 
 /*
@@ -46,8 +47,29 @@ func init() {
 	//2048 比较合适
 	src.NewAsyncLogConfig(src.InitLogAsyncBuffSize(2048), src.InitLogAsyncGoNum(10))
 	//src.DebugAsync("DebugAsync", "s1").MsgAsync("DebugAsync")
-	src.InfoAsync("tag", "s1").MsgAsync("MsgAsync")
 
+	s := &str{
+		Name: "name",
+		Age:  18,
+		Sex:  []int{1, 2, 3, 4},
+		Aa: &A{
+			Name: "aaa",
+			Age:  15,
+		},
+	}
+	src.InfoAsync("tag", "s1", s).MsgAsync("MsgAsync")
+
+}
+
+type str struct {
+	Name string
+	Age  int
+	Sex  []int
+	Aa   *A
+}
+type A struct {
+	Name string
+	Age  int
 }
 
 /*
@@ -89,12 +111,12 @@ func AsyncLog() {
 		age  int
 		sex  []int
 	}
-	s := str{
+	s := &str{
 		name: "name",
 		age:  18,
 		sex:  []int{1, 2, 3, 4},
 	}
-	s1 := str{
+	s1 := &str{
 		name: "name1",
 		age:  181,
 		sex:  []int{1, 2, 3, 41},

@@ -2,13 +2,14 @@ package src
 
 import (
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/bytedance/sonic"
 	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
 	ipInfo "github.com/zqlpaopao/tool/ip/src"
 	"go.uber.org/zap"
 	zapCore "go.uber.org/zap/zapcore"
-	"io"
-	"time"
 )
 
 const (
@@ -197,7 +198,7 @@ func (e *ErrorHandle) Msg(msg string) {
 		c.Params,
 		c.Msg =
 		IpInfo,
-		MarshData(e.args),
+		e.args,
 		msg
 
 	z := zap.Any("info", *c)
@@ -228,8 +229,8 @@ func DebugPrint(tag string, info *CallBack) {
 }
 
 // MarshData json to string
+// sonic.MarshalString 本身支持指针(&struct),会自动解引用序列化
 func MarshData(args []interface{}) (str string) {
-	//var err error
 	str, _ = sonic.MarshalString(args)
 	return str
 }

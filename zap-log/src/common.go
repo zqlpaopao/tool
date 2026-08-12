@@ -15,6 +15,6 @@ type CallerInfo struct {
 
 type CallBack struct {
 	Ip     string
-	Params string
+	Params interface{}
 	Msg    string
 }

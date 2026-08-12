@@ -22,7 +22,7 @@ func (e *ErrorHandle) Reset() {
 
 // Reset Fallback object initialization status
 func (e *CallBack) Reset() {
-	e.Ip, e.Params, e.Msg = "", "", ""
+	e.Ip, e.Params, e.Msg = "", nil, ""
 }
 
 // NewBuffErrSize Initialize the size of the resource pool
