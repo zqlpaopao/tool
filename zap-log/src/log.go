@@ -225,7 +225,8 @@ func (e *ErrorHandle) Msg(msg string) {
 
 // DebugPrint print Stdout
 func DebugPrint(tag string, info *CallBack) {
-	fmt.Printf("\n------%s start-----\nIP: %s\nParams: %s\nMsg:%s\n------%s end-------\n", tag, info.Ip, info.Params, info.Msg, tag)
+	params, _ := sonic.MarshalString(info.Params)
+	fmt.Printf("\n------%s start-----\nIP: %s\nParams: %s\nMsg:%s\n------%s end-------\n", tag, info.Ip, params, info.Msg, tag)
 }
 
 // MarshData json to string
